@@ -39,8 +39,14 @@ necessary-but-not-sufficient for escalation.
 
 import numpy as np
 import pandas as pd
+import os
+
+# Helper to build paths correctly
+def get_data_path(filename):
+    return os.path.join(os.path.dirname(os.path.abspath(__file__)), filename)
 
 RNG = np.random.default_rng(42)
+
 
 # ----------------------------------------------------------------------------
 # CALIBRATION CONSTANTS (sourced from the real dataset summaries above)
@@ -161,22 +167,40 @@ def generate_app_sessions(users_df, n_sessions):
 
         # --- paste ratio ---
         if is_fraud:
-            pasted_char_ratio = RNG.beta(8, 2)   # skews high, near 1.0
+            if RNG.random() < 0.65: # Changed from 0.8 to 0.65 (0.35 mimic-rate)
+                pasted_char_ratio = RNG.beta(6, 3)   # typical rushed attacker
+            else:
+                pasted_char_ratio = RNG.beta(1, 10)  # careful attacker, mimics normal
         else:
-            pasted_char_ratio = RNG.beta(1, 15)  # skews low, near 0
+            if RNG.random() < 0.8:  # Changed from 0.9 to 0.8 (0.2 mimic-rate)
+                pasted_char_ratio = RNG.beta(1, 15)  # typical normal user
+            else:
+                pasted_char_ratio = RNG.beta(3, 3)   # normal user, password manager/autofill
 
         # --- screen sequence ---
         if is_fraud:
-            n_skip = RNG.integers(2, 5)
-            visited = [s for s in APP_SCREENS if RNG.random() > 0.0][:]
-            visited = list(RNG.choice(APP_SCREENS, size=len(APP_SCREENS) - n_skip,
-                                       replace=False))
-        else:
-            # occasionally skip one non-critical screen (e.g. saved beneficiary shortcut)
-            if RNG.random() < 0.1:
-                visited = [s for s in APP_SCREENS if s != "review"]
+            r = RNG.random()
+            if r < 0.25:
+                n_skip = 0   # careful attacker navigates full flow to blend in
+            elif r < 0.45:
+                n_skip = 1
             else:
-                visited = APP_SCREENS[:]
+                n_skip = RNG.integers(2, 5)
+        else:
+            r = RNG.random()
+            if r < 0.60: # (Proportional decrease: 0.75 -> 0.60)
+                n_skip = 0
+            elif r < 0.80: # (Proportional decrease: 0.95 -> 0.80)
+                n_skip = 1
+            else:
+                n_skip = 2   # occasional distracted/confused normal user
+
+        if n_skip == 0:
+            visited = APP_SCREENS[:]
+        elif n_skip == 1:
+            visited = [s for s in APP_SCREENS if s != "review"]
+        else:
+            visited = list(RNG.choice(APP_SCREENS, size=len(APP_SCREENS) - n_skip, replace=False))
         screen_sequence_anomaly = screen_missing_fraction(visited)
 
         # --- amount ---
@@ -308,8 +332,8 @@ if __name__ == "__main__":
     ussd_users = build_ussd_users(N_USSD_USERS)
     ussd_sessions = generate_ussd_sessions(ussd_users, N_USSD_SESSIONS)
 
-    app_sessions.to_csv("app_channel_data.csv", index=False)
-    ussd_sessions.to_csv("ussd_channel_data.csv", index=False)
+    app_sessions.to_csv(get_data_path("app_channel_data.csv"), index=False)
+    ussd_sessions.to_csv(get_data_path("ussd_channel_data.csv"), index=False)
 
     print("\n" + "=" * 60)
     print("APP CHANNEL SUMMARY")
