@@ -1,0 +1,13 @@
+﻿python : Traceback (most recent call last):
+At line:1 char:1
++ python -c "exec(open('data/generate_synthetic_data.py').read())" 2>&1 ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Traceback (most recent call last)::String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+  File "<string>", line 1, in <module>
+    exec(open('data/generate_synthetic_data.py').read())
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<string>", line 311, in <module>
+  File "<string>", line 46, in get_data_path
+NameError: name '__file__' is not defined. Did you mean: '__name__'?
