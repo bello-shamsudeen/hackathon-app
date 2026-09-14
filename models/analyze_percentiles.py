@@ -6,7 +6,7 @@ app_data = pd.read_csv('data/app_channel_data.csv')
 ussd_data = pd.read_csv('data/ussd_channel_data.csv')
 
 # Define target features
-app_features = ['typing_speed_deviation', 'pasted_char_ratio', 'screen_sequence_anomaly', 'amount_deviation']
+app_features = ['typing_speed_deviation', 'pasted_char_ratio', 'first_action_deviation', 'amount_deviation']
 ussd_features = ['amount_deviation', 'time_of_day_deviation', 'session_retry_deviation', 'sim_swap_risk']
 
 results = []

@@ -172,36 +172,19 @@ def generate_app_sessions(users_df, n_sessions):
             else:
                 pasted_char_ratio = RNG.beta(1, 10)  # careful attacker, mimics normal
         else:
-            if RNG.random() < 0.8:  # Changed from 0.9 to 0.8 (0.2 mimic-rate)
+            if RNG.random() < 0.66:  # Changed from 0.8 to 0.66 (0.34 mimic-rate)
                 pasted_char_ratio = RNG.beta(1, 15)  # typical normal user
             else:
                 pasted_char_ratio = RNG.beta(3, 3)   # normal user, password manager/autofill
 
-        # --- screen sequence ---
+        # first_action_deviation: uses an independent random substream so editing
+        # this block cannot shift the random draws consumed by any other feature
+        # generated later in the same row.
+        first_action_rng = np.random.default_rng(RNG.integers(0, 2**31))
         if is_fraud:
-            r = RNG.random()
-            if r < 0.25:
-                n_skip = 0   # careful attacker navigates full flow to blend in
-            elif r < 0.45:
-                n_skip = 1
-            else:
-                n_skip = RNG.integers(2, 5)
+            first_action_deviation = 1.0 if first_action_rng.random() < 0.72 else 0.0
         else:
-            r = RNG.random()
-            if r < 0.60: # (Proportional decrease: 0.75 -> 0.60)
-                n_skip = 0
-            elif r < 0.80: # (Proportional decrease: 0.95 -> 0.80)
-                n_skip = 1
-            else:
-                n_skip = 2   # occasional distracted/confused normal user
-
-        if n_skip == 0:
-            visited = APP_SCREENS[:]
-        elif n_skip == 1:
-            visited = [s for s in APP_SCREENS if s != "review"]
-        else:
-            visited = list(RNG.choice(APP_SCREENS, size=len(APP_SCREENS) - n_skip, replace=False))
-        screen_sequence_anomaly = screen_missing_fraction(visited)
+            first_action_deviation = 1.0 if first_action_rng.random() < 0.10 else 0.0
 
         # --- amount ---
         if is_fraud:
@@ -215,7 +198,7 @@ def generate_app_sessions(users_df, n_sessions):
             "user_id": u["user_id"],
             "typing_speed_deviation": round(typing_speed_deviation, 4),
             "pasted_char_ratio": round(pasted_char_ratio, 4),
-            "screen_sequence_anomaly": round(screen_sequence_anomaly, 4),
+            "first_action_deviation": round(first_action_deviation, 4),
             "amount_deviation": round(amount_deviation, 4),
             "label": int(is_fraud),
         })
@@ -332,23 +315,15 @@ if __name__ == "__main__":
     ussd_users = build_ussd_users(N_USSD_USERS)
     ussd_sessions = generate_ussd_sessions(ussd_users, N_USSD_SESSIONS)
 
-    app_sessions.to_csv(get_data_path("app_channel_data.csv"), index=False)
-    ussd_sessions.to_csv(get_data_path("ussd_channel_data.csv"), index=False)
+    app_csv_path = get_data_path("app_channel_data.csv")
+    app_sessions.to_csv(app_csv_path, index=False)
 
-    print("\n" + "=" * 60)
-    print("APP CHANNEL SUMMARY")
-    print("=" * 60)
-    print(f"Rows: {len(app_sessions)}   Fraud rate: {app_sessions['label'].mean():.3f}")
-    print(app_sessions.groupby("label")[
-        ["typing_speed_deviation", "pasted_char_ratio",
-         "screen_sequence_anomaly", "amount_deviation"]].mean())
+    # USSD CSV is not written — no write operation touches it at all.
 
-    print("\n" + "=" * 60)
-    print("USSD CHANNEL SUMMARY")
-    print("=" * 60)
-    print(f"Rows: {len(ussd_sessions)}   Fraud rate: {ussd_sessions['label'].mean():.3f}")
-    print(ussd_sessions.groupby("label")[
-        ["amount_deviation", "time_of_day_deviation",
-         "session_retry_deviation", "sim_swap_risk"]].mean())
+    app_mtime = os.path.getmtime(app_csv_path)
+    print(f"\nApp CSV absolute path: {app_csv_path}")
+    print(f"App CSV last-modified timestamp: {app_mtime}")
 
-    print("\nSaved: app_channel_data.csv, ussd_channel_data.csv")
+    ussd_csv_path = get_data_path("ussd_channel_data.csv")
+    print(f"USSD CSV path: {ussd_csv_path}")
+    print("USSD CSV was never written or opened for writing — timestamp UNCHANGED.")

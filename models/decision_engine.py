@@ -2,7 +2,7 @@ ELEVATION_THRESHOLDS = {
     "app": {
         "typing_speed_deviation": 2.0,
         "pasted_char_ratio": 0.65,
-        "screen_sequence_anomaly": 0.34,
+        "first_action_deviation": 0.34,
         "amount_deviation": 1.26
     },
     "ussd": {
@@ -16,7 +16,7 @@ ELEVATION_THRESHOLDS = {
 REASON_TEMPLATES = {
     "typing_speed_deviation": "you typed at an unusual speed for you",
     "pasted_char_ratio": "your details were pasted rather than typed",
-    "screen_sequence_anomaly": "you skipped steps you normally go through",
+    "first_action_deviation": "you acted differently than your usual pattern",
     "amount_deviation": "this amount is unusual for you",
     "time_of_day_deviation": "this was sent at an unusual time for you",
     "session_retry_deviation": "there were more retries than usual",
@@ -55,8 +55,8 @@ def make_decision(model_output: dict) -> dict:
             action = "allow"
             applied_sim_swap_override = True
             
-    # Guardrail 3: App screen_sequence_anomaly override
-    if channel == "app" and len(elevated_features) == 1 and elevated_features[0] == "screen_sequence_anomaly" and tier == "high":
+    # Guardrail 3: App first_action_deviation override
+    if channel == "app" and len(elevated_features) == 1 and elevated_features[0] == "first_action_deviation" and tier == "high":
         tier = "medium"
         action = "step_up"
         
@@ -98,7 +98,7 @@ if __name__ == "__main__":
          "session_count": 30},
 
         {"user_id": "app_0003", "channel": "app", "risk_score": 85.0,
-         "top_features": [["pasted_char_ratio", 0.9], ["screen_sequence_anomaly", 0.6]],
+         "top_features": [["pasted_char_ratio", 0.9], ["first_action_deviation", 0.6]],
          "session_count": 25},
 
         {"user_id": "ussd_0004", "channel": "ussd", "risk_score": 78.0,
@@ -106,11 +106,11 @@ if __name__ == "__main__":
          "session_count": 2},
          
         {"user_id": "app_0005", "channel": "app", "risk_score": 85.0,
-         "top_features": [["screen_sequence_anomaly", 0.5], ["amount_deviation", 0.3]],
+         "top_features": [["first_action_deviation", 0.5], ["amount_deviation", 0.3]],
          "session_count": 25},
 
         {"user_id": "app_0006", "channel": "app", "risk_score": 85.0,
-         "top_features": [["screen_sequence_anomaly", 0.5], ["pasted_char_ratio", 0.9]],
+         "top_features": [["first_action_deviation", 0.5], ["pasted_char_ratio", 0.9]],
          "session_count": 25}
     ]
     

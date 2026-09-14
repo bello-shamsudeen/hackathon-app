@@ -1,5 +1,5 @@
 import unittest
-from models.decision_engine import make_decision
+from decision_engine import make_decision
 
 class TestDecisionEngine(unittest.TestCase):
     def setUp(self):
@@ -13,7 +13,7 @@ class TestDecisionEngine(unittest.TestCase):
              "session_count": 30},  # expect tier "low"
 
             {"user_id": "app_0003", "channel": "app", "risk_score": 85.0,
-             "top_features": [["pasted_char_ratio", 0.9], ["screen_sequence_anomaly", 0.6]],
+             "top_features": [["pasted_char_ratio", 0.9], ["first_action_deviation", 0.6]],
              "session_count": 25},  # expect tier "high"
 
             {"user_id": "ussd_0004", "channel": "ussd", "risk_score": 78.0,
@@ -43,7 +43,7 @@ class TestDecisionEngine(unittest.TestCase):
 
     def test_case_5(self):
         case = {"user_id": "app_0005", "channel": "app", "risk_score": 85.0,
-                "top_features": [["screen_sequence_anomaly", 0.5], ["amount_deviation", 0.3]],
+                "top_features": [["first_action_deviation", 0.5], ["amount_deviation", 0.3]],
                 "session_count": 25}
         result = make_decision(case)
         self.assertEqual(result["tier"], "medium")
@@ -51,7 +51,7 @@ class TestDecisionEngine(unittest.TestCase):
 
     def test_case_6(self):
         case = {"user_id": "app_0006", "channel": "app", "risk_score": 85.0,
-                "top_features": [["screen_sequence_anomaly", 0.5], ["pasted_char_ratio", 0.9]],
+                "top_features": [["first_action_deviation", 0.5], ["pasted_char_ratio", 0.9]],
                 "session_count": 25}
         result = make_decision(case)
         self.assertEqual(result["tier"], "high")
