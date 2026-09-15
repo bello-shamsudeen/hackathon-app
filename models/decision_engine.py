@@ -85,10 +85,29 @@ def make_decision(model_output: dict) -> dict:
         tier = "medium"
         action = "step_up"
 
+    REASON_TEMPLATES = {
+        "typing_speed_deviation": "you typed at an unusual speed for you",
+        "pasted_char_ratio": "your details were pasted rather than typed",
+        "first_action_deviation": "you went straight to a transfer without checking your balance first, which isn't your usual pattern",
+        "amount_deviation": "this amount is unusual for you",
+        "time_of_day_deviation": "this was sent at an unusual time for you",
+        "session_retry_deviation": "there were more retries than usual",
+        "sim_swap_risk": "your SIM was recently changed"
+    }
+
+    # Normalize top_features to a list of [name, value] pairs for consistent indexing
+    if isinstance(top_features, dict):
+        top_features = list(top_features.items())
+
+    if tier == "low":
+        message = "This transaction looks consistent with your normal activity."
+    else:
+        message = "This transaction was flagged because " + REASON_TEMPLATES[top_features[0][0]] + ", and " + REASON_TEMPLATES[top_features[1][0]] + "."
+
     return {
         "tier": tier,
         "action": action,
-        "message": "placeholder",
+        "message": message,
         "user_id": user_id,
         "channel": channel,
     }
