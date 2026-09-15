@@ -94,29 +94,30 @@ def make_decision(model_output: dict) -> dict:
     }
 
 
-def decide_offline_fallback(session_data: dict) -> dict:
+def decide_offline_fallback(transaction: dict) -> dict:
     """
-    Fallback decision when the model/scoring service is unreachable.
-    Uses the brief's described "blunt" legacy rule — no model calls,
-    no ELEVATION_THRESHOLDS.
+    Fallback decision when the real model + decision engine pipeline is
+    unreachable (e.g. a power outage or network outage).  This must NOT depend
+    on any trained model — it only inspects the raw transaction fields.
+
+    This intentionally mirrors the "blunt" large / first-time-transfer rule the
+    hackathon brief itself describes as the inferior status quo — used here
+    ONLY as a degraded-mode fallback when the primary ML pipeline is unavailable.
 
     Args:
-        session_data (dict): Contains 'amount', 'is_first_time_recipient',
-            'local_recent_session_count', and 'channel' keys.
+        transaction (dict): Contains 'user_id', 'channel', 'amount'
+            (in NGN) and 'is_first_time_recipient' (bool) keys.
 
     Returns:
-        dict: Decision result with tier, action, message, and channel.
+        dict: Decision result with tier, action, message, user_id, and channel.
     """
-    amount = session_data.get("amount", 0)
-    is_first_time_recipient = session_data.get("is_first_time_recipient", False)
-    local_recent_session_count = session_data.get("local_recent_session_count", 0)
-    channel = session_data.get("channel", "unknown")
+    # No "high" tier in degraded mode — only medium (step-up) or low (allow).
+    user_id = transaction.get("user_id", "")
+    channel = transaction.get("channel", "")
+    amount = transaction.get("amount", 0)
+    is_first_time_recipient = transaction.get("is_first_time_recipient", False)
 
-    # Blunt legacy rule
-    if amount > 100000 and is_first_time_recipient is True:
-        tier = "high"
-        action = "block"
-    elif local_recent_session_count == 0:
+    if amount > 100000 or is_first_time_recipient is True:
         tier = "medium"
         action = "step_up"
     else:
@@ -126,7 +127,8 @@ def decide_offline_fallback(session_data: dict) -> dict:
     return {
         "tier": tier,
         "action": action,
-        "message": "offline_fallback_mode",
+        "message": "operating in offline/degraded mode — fallback rule (no model)",
+        "user_id": user_id,
         "channel": channel,
     }
 
@@ -182,19 +184,24 @@ if __name__ == "__main__":
     result_8 = make_decision(case_8)
     print(result_8)
 
-    # === decide_offline_fallback test cases ===
-    # Case 9: amount > 100000 AND is_first_time_recipient → tier "high"
-    case_9 = {"channel": "app", "amount": 150000, "is_first_time_recipient": True, "local_recent_session_count": 5}
-    result_9 = decide_offline_fallback(case_9)
-    print(result_9)
+        # === decide_offline_fallback test cases (operating in offline/degraded mode) ===
+    # Case (a): small amount, not first-time → expect tier "low"
+    case_a = {"user_id": "app_0008", "channel": "app", "amount": 5000, "is_first_time_recipient": False}
+    result_a = decide_offline_fallback(case_a)
+    print(result_a)
 
-    # Case 10: local_recent_session_count == 0 → tier "medium"
-    case_10 = {"channel": "ussd", "amount": 500, "is_first_time_recipient": False, "local_recent_session_count": 0}
-    result_10 = decide_offline_fallback(case_10)
-    print(result_10)
+    # Case (b): large amount (> 100000 NGN), not first-time → expect tier "medium"
+    case_b = {"user_id": "app_0009", "channel": "app", "amount": 250000, "is_first_time_recipient": False}
+    result_b = decide_offline_fallback(case_b)
+    print(result_b)
 
-    # Case 11: default → tier "low"
-    case_11 = {"channel": "app", "amount": 500, "is_first_time_recipient": False, "local_recent_session_count": 10}
-    result_11 = decide_offline_fallback(case_11)
-    print(result_11)
+    # Case (c): small amount, first-time recipient → expect tier "medium"
+    case_c = {"user_id": "app_0010", "channel": "app", "amount": 5000, "is_first_time_recipient": True}
+    result_c = decide_offline_fallback(case_c)
+    print(result_c)
+
+    # Case (d): large amount AND first-time recipient → expect tier "medium" (both conditions)
+    case_d = {"user_id": "app_0011", "channel": "app", "amount": 250000, "is_first_time_recipient": True}
+    result_d = decide_offline_fallback(case_d)
+    print(result_d)
 
