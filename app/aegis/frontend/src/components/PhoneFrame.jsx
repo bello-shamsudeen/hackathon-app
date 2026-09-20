@@ -65,9 +65,9 @@ export default function PhoneFrame({ children, showNav = true }) {
             display: 'flex', alignItems: 'center', justifyContent: 'space-around',
             padding: '14px 0 20px', background: '#fff', borderTop: '1px solid var(--bank-border)'
           }}>
-            <NavIcon label="Home" active={isActive('/bank/home')} onClick={() => navigate('/bank/home')} icon="\u2302" />
+            <NavIcon label="Home" active={isActive('/bank/home')} onClick={() => navigate('/bank/home')} icon={'\u2302'} />
             <SendButton onClick={() => navigate('/bank/send')} />
-            <NavIcon label="History" active={isActive('/bank/history')} onClick={() => navigate('/bank/history')} icon="\u2261" />
+            <NavIcon label="History" active={isActive('/bank/history')} onClick={() => navigate('/bank/history')} icon={'\u2261'} />
           </div>
         )}
       </div>
