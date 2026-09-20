@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    { "source": "/bank/:path*", "destination": "https://aegis-backend-l145.onrender.com/bank/:path*" },
+    { "source": "/score/:path*", "destination": "https://aegis-backend-l145.onrender.com/score/:path*" },
+    { "source": "/ussd", "destination": "https://aegis-backend-l145.onrender.com/ussd" },
+    { "source": "/ingest/:path*", "destination": "https://aegis-backend-l145.onrender.com/ingest/:path*" }
+  ]
+}
