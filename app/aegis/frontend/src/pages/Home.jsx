@@ -24,19 +24,19 @@ export default function Home({ session, showColdStartHint, dismissColdStartHint 
 
   return (
     <PhoneFrame>
-      <div style={{ padding: 20 }} onMouseMove={capture.onMouseMove}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+      <div style={{ padding: 22 }} onMouseMove={capture.onMouseMove}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 22 }}>
           <div>
-            <div style={{ fontSize: 13, color: 'var(--bank-ink-dim)' }}>Hi,</div>
-            <div style={{ fontSize: 18, fontWeight: 700, fontFamily: 'var(--font-display)' }}>{session.full_name}</div>
+            <div style={{ fontSize: 14, color: 'var(--bank-ink-dim)' }}>Hi,</div>
+            <div style={{ fontSize: 20, fontWeight: 700, fontFamily: 'var(--font-display)' }}>{session.full_name}</div>
           </div>
           <Avatar name={session.full_name} photoUrl={session.avatar_data_url} onClick={() => navigate('/bank/profile')} />
         </div>
 
         {showColdStartHint && (
           <div style={{
-            background: 'var(--verdict-medium-bg)', color: '#8A6200', fontSize: 12,
-            padding: '10px 14px', borderRadius: 8, marginBottom: 16, display: 'flex',
+            background: 'var(--verdict-medium-bg)', color: '#8A6200', fontSize: 13,
+            padding: '12px 16px', borderRadius: 8, marginBottom: 18, display: 'flex',
             justifyContent: 'space-between', alignItems: 'center'
           }}>
             <span>New accounts get extra verification on early transactions.</span>
@@ -45,20 +45,20 @@ export default function Home({ session, showColdStartHint, dismissColdStartHint 
         )}
 
         <div style={{
-          background: 'var(--bank-navy-900)', color: '#fff', borderRadius: 14, padding: 24, marginBottom: 20
+          background: 'var(--bank-navy-900)', color: '#fff', borderRadius: 14, padding: 26, marginBottom: 22
         }}>
-          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', marginBottom: 6 }}>Available balance</div>
+          <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)', marginBottom: 8 }}>Available balance</div>
           {balance && (
-            <div style={{ fontSize: 30, fontFamily: 'var(--font-display)', fontWeight: 700 }}>
+            <div style={{ fontSize: 34, fontFamily: 'var(--font-display)', fontWeight: 700 }}>
               &#8358;{balance.balance.toLocaleString()}
             </div>
           )}
-          <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginTop: 10 }} className="mono">
+          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', marginTop: 12 }} className="mono">
             &#8226;&#8226;&#8226;&#8226; {session.account_number?.slice(-4)}
           </div>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 10, marginBottom: 24 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 12, marginBottom: 26 }}>
           <Tile label="Send" icon="&#8593;" onClick={() => navigate('/bank/send')} />
           <Tile label="Airtime" icon="&#128241;" />
           <Tile label="Bills" icon="&#128196;" />
@@ -66,26 +66,26 @@ export default function Home({ session, showColdStartHint, dismissColdStartHint 
           <Tile label="USSD Demo" icon="&#128222;" onClick={() => navigate('/bank/ussd')} />
         </div>
 
-        <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'var(--bank-ink-dim)', marginBottom: 16 }}>
+        <label style={{ display: 'flex', alignItems: 'center', gap: 9, fontSize: 13, color: 'var(--bank-ink-dim)', marginBottom: 18 }}>
           <input type="checkbox" onChange={(e) => capture.setCallActive(e.target.checked)} />
           I'm currently on a phone call (demo toggle)
         </label>
 
-        <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 10 }}>Recent activity</div>
+        <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 12 }}>Recent activity</div>
         {recent.map(tx => (
           <div key={tx.id} style={{
             display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-            padding: '12px 0', borderBottom: '1px solid var(--bank-border)'
+            padding: '14px 0', borderBottom: '1px solid var(--bank-border)'
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <span style={{ width: 8, height: 8, borderRadius: '50%', background: VERDICT_DOT[tx.verdict] || VERDICT_DOT.ALLOW }} />
-              <span style={{ fontSize: 13 }}>{tx.beneficiary_account}</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 11 }}>
+              <span style={{ width: 9, height: 9, borderRadius: '50%', background: VERDICT_DOT[tx.verdict] || VERDICT_DOT.ALLOW }} />
+              <span style={{ fontSize: 14 }}>{tx.beneficiary_account}</span>
             </div>
-            <span style={{ fontSize: 13, fontWeight: 600 }} className="mono">-&#8358;{tx.amount.toLocaleString()}</span>
+            <span style={{ fontSize: 14, fontWeight: 600 }} className="mono">-&#8358;{tx.amount.toLocaleString()}</span>
           </div>
         ))}
         {recent.length === 0 && (
-          <div style={{ fontSize: 13, color: 'var(--bank-ink-dim)', padding: '20px 0', textAlign: 'center' }}>
+          <div style={{ fontSize: 14, color: 'var(--bank-ink-dim)', padding: '22px 0', textAlign: 'center' }}>
             No transactions yet
           </div>
         )}
@@ -98,11 +98,11 @@ function Tile({ label, icon, onClick }) {
   return (
     <button onClick={onClick} style={{
       background: '#fff', border: '1px solid var(--bank-border)', borderRadius: 12,
-      padding: '14px 4px', cursor: onClick ? 'pointer' : 'default', display: 'flex',
-      flexDirection: 'column', alignItems: 'center', gap: 6
+      padding: '16px 5px', cursor: onClick ? 'pointer' : 'default', display: 'flex',
+      flexDirection: 'column', alignItems: 'center', gap: 7
     }}>
-      <span style={{ fontSize: 18 }}>{icon}</span>
-      <span style={{ fontSize: 11, fontWeight: 600 }}>{label}</span>
+      <span style={{ fontSize: 21 }}>{icon}</span>
+      <span style={{ fontSize: 12, fontWeight: 600 }}>{label}</span>
     </button>
   )
 }
