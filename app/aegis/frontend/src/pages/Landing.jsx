@@ -28,15 +28,34 @@ export default function Landing({ onLogin }) {
 
   return (
     <div className="theme-ops" style={{ minHeight: '100vh' }}>
-      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '24px 48px', borderBottom: '1px solid var(--ops-border)' }}>
+      <style>{`
+        .landing-header {
+          display: flex; justify-content: space-between; align-items: center;
+          padding: 24px 48px; border-bottom: 1px solid var(--ops-border);
+        }
+        .landing-hero {
+          display: grid; grid-template-columns: 1fr 1fr; align-items: center;
+          gap: 64px; padding: 48px; max-width: 1200px; margin: 0 auto;
+        }
+        .landing-h1 { font-size: 44px; line-height: 1.15; margin-bottom: 20px; max-width: 480px; }
+        @media (max-width: 768px) {
+          .landing-header { padding: 16px 20px; }
+          .landing-hero {
+            grid-template-columns: 1fr; gap: 32px; padding: 24px;
+          }
+          .landing-h1 { font-size: 28px; max-width: 100%; }
+        }
+      `}</style>
+
+      <header className="landing-header">
         <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 20 }}>Aegis</div>
         <div style={{ color: 'var(--ops-text-dim)', fontSize: 14 }}>Built by SEES HACK for ICSC 2026</div>
       </header>
 
       {/* Hero */}
-      <main style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', alignItems: 'center', gap: 64, padding: '48px', maxWidth: 1200, margin: '0 auto' }}>
+      <main className="landing-hero">
         <div>
-          <h1 style={{ fontSize: 44, lineHeight: 1.15, marginBottom: 20, maxWidth: 480 }}>
+          <h1 className="landing-h1">
             It checks the secret. Aegis checks the human.
           </h1>
           <p style={{ color: 'var(--ops-text-dim)', fontSize: 17, lineHeight: 1.6, maxWidth: 460, marginBottom: 32 }}>
