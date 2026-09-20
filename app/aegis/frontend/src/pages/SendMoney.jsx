@@ -34,22 +34,7 @@ export default function SendMoney({ session }) {
     })
     const transferData = await transferRes.json()
 
-    // --- NEW: fetch LLM rewrite of the decision via /explain ---
-    let explanation = null
-    let explanationSource = 'deterministic'
-    try {
-      const explainRes = await fetch(`/score/decision/${session.session_id}/explain`, { method: 'POST' })
-      const explainData = await explainRes.json()
-      explanation = explainData.customer.text
-      explanationSource = explainData.customer.source
-    } catch (err) {
-      // /explain may fail if no decision exists; gracefully fall back
-      explanation = transferData.detection?.message
-      explanationSource = 'deterministic'
-    }
-    // --------------------------------
-
-    setDecision({ ...transferData.detection, explanation, explanationSource })
+    setDecision({ ...transferData.detection, explanation: transferData.detection?.message, explanationSource: 'deterministic' })
     setLoading(false)
     setStep(4)
   }
@@ -135,7 +120,7 @@ function StepReview({ beneficiary, amount, loading, onConfirm, honeytoken, setHo
         <Row label="Amount" value={`\u20a6${parseFloat(amount || 0).toLocaleString()}`} />
       </div>
 
-      {/* Division 8B honeytoken — invisible to real users */}
+      {/* Division 8B honeytoken â€” invisible to real users */}
       <input
         type="text" name="confirm_email_address" value={honeytoken}
         onChange={(e) => setHoneytoken(e.target.value)} tabIndex={-1} autoComplete="off"
