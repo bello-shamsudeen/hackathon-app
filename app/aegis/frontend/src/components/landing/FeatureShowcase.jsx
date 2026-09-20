@@ -1,16 +1,25 @@
 import { useState, useEffect } from 'react'
 
 /**
- * Division 9A — Feature Showcase.
+ * Division 9A - Feature Showcase.
  * DESIGN CHOICE: 4 features (not all 7 built), each with its own bespoke
  * animated micro-panel grounded in something actually proven in this build
- * — not a generic icon+text card grid. Alternating layout keeps a flat
+ * - not a generic icon+text card grid. Alternating layout keeps a flat
  * "grid of cards" feeling from creeping in. Motion is per-panel, tied to
  * the real behavior it's demonstrating, not a blanket scroll-fade.
  */
 export default function FeatureShowcase() {
   return (
     <section style={{ maxWidth: 1100, margin: '0 auto', padding: '80px 48px' }}>
+      <style>{`
+        @media (max-width: 768px) {
+          .feature-row {
+            grid-template-columns: 1fr !important;
+            direction: ltr !important;
+            gap: 24px !important;
+          }
+        }
+      `}</style>
       <h2 style={{ fontSize: 32, marginBottom: 8, maxWidth: 560 }}>
         Four ways Aegis sees what a password can't
       </h2>
@@ -19,22 +28,22 @@ export default function FeatureShowcase() {
       </p>
 
       <FeatureRow reverse={false} title="Correct PIN. Correct OTP. Blocked anyway."
-        body="A stolen SIM passes every credential check there is. Aegis checks whether the device has ever touched this account before — and whether the SIM moved recently. Neither alone means anything. Together, they mean everything.">
+        body="A stolen SIM passes every credential check there is. Aegis checks whether the device has ever touched this account before - and whether the SIM moved recently. Neither alone means anything. Together, they mean everything.">
         <SimSwapPanel />
       </FeatureRow>
 
       <FeatureRow reverse={true} title="Built for the phone that isn't smart"
-        body="No app. No JavaScript. No keystrokes to read. Aegis speaks the real USSD protocol banks use with telecom aggregators — the same interface, so it works unchanged behind a real telco connection.">
+        body="No app. No JavaScript. No keystrokes to read. Aegis speaks the real USSD protocol banks use with telecom aggregators - the same interface, so it works unchanged behind a real telco connection.">
         <UssdPanel />
       </FeatureRow>
 
       <FeatureRow reverse={false} title="It notices when you're not really deciding"
-        body="Most fraud in this market isn't a bot — it's a real person, on their own phone, being talked through a transfer by someone on the other end of a call. Aegis reads the hesitation, not just the outcome.">
+        body="Most fraud in this market isn't a bot - it's a real person, on their own phone, being talked through a transfer by someone on the other end of a call. Aegis reads the hesitation, not just the outcome.">
         <CoachedPanel />
       </FeatureRow>
 
       <FeatureRow reverse={true} title="Ask it. It'll show its work."
-        body="Every explanation is grounded in the same numbers that produced the decision — never invented. Ask a follow-up question and it answers from the real data, or tells you plainly when it doesn't know.">
+        body="Every explanation is grounded in the same numbers that produced the decision - never invented. Ask a follow-up question and it answers from the real data, or tells you plainly when it doesn't know.">
         <CopilotPanel />
       </FeatureRow>
     </section>
@@ -43,7 +52,7 @@ export default function FeatureShowcase() {
 
 function FeatureRow({ title, body, children, reverse }) {
   return (
-    <div style={{
+    <div className="feature-row" style={{
       display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 56, alignItems: 'center',
       marginBottom: 72, direction: reverse ? 'rtl' : 'ltr'
     }}>
