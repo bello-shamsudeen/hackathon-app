@@ -56,7 +56,7 @@ export default function SendMoney({ session }) {
 
   return (
     <PhoneFrame showNav={step !== 4}>
-      <div style={{ padding: 22 }}>
+      <div style={{ padding: 20 }}>
         {step > 1 && step < 4 && (
           <button onClick={() => setStep(step - 1)} style={backBtn}>&larr; Back</button>
         )}
@@ -93,13 +93,13 @@ function StepRecipient({ beneficiary, setBeneficiary, capture, onNext }) {
         onKeyDown={capture.onKeyDown} onKeyUp={capture.onKeyUp} onPaste={capture.onPaste}
         placeholder="Account number" style={inputStyle} autoFocus
       />
-      <div style={{ marginTop: 22, fontSize: 13, color: 'var(--bank-ink-dim)', marginBottom: 9 }}>Recent</div>
+      <div style={{ marginTop: 20, fontSize: 12, color: 'var(--bank-ink-dim)', marginBottom: 8 }}>Recent</div>
       {RECENTS.map(r => (
         <button key={r.account} onClick={() => setBeneficiary(r.account)} style={chipStyle}>
           {r.name}
         </button>
       ))}
-      <button disabled={!beneficiary} onClick={onNext} style={{ ...primaryBtn, marginTop: 26, opacity: beneficiary ? 1 : 0.4 }}>
+      <button disabled={!beneficiary} onClick={onNext} style={{ ...primaryBtn, marginTop: 24, opacity: beneficiary ? 1 : 0.4 }}>
         Continue
       </button>
     </div>
@@ -110,13 +110,13 @@ function StepAmount({ amount, setAmount, capture, onNext }) {
   return (
     <div>
       <h2 style={h2}>Amount</h2>
-      <div style={{ display: 'flex', alignItems: 'baseline', gap: 7, margin: '32px 0' }}>
-        <span style={{ fontSize: 30, color: 'var(--bank-ink-dim)' }}>&#8358;</span>
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, margin: '32px 0' }}>
+        <span style={{ fontSize: 26, color: 'var(--bank-ink-dim)' }}>&#8358;</span>
         <input
           value={amount} onChange={(e) => setAmount(e.target.value)}
           onKeyDown={capture.onKeyDown} onKeyUp={capture.onKeyUp} onPaste={capture.onPaste}
           placeholder="0" autoFocus
-          style={{ border: 'none', fontSize: 44, fontFamily: 'var(--font-display)', fontWeight: 700, width: '100%', outline: 'none' }}
+          style={{ border: 'none', fontSize: 46, fontFamily: 'var(--font-display)', fontWeight: 700, width: '100%', outline: 'none' }}
         />
       </div>
       <button disabled={!amount} onClick={onNext} style={{ ...primaryBtn, opacity: amount ? 1 : 0.4 }}>
@@ -130,7 +130,7 @@ function StepReview({ beneficiary, amount, loading, onConfirm, honeytoken, setHo
   return (
     <div>
       <h2 style={h2}>Review</h2>
-      <div style={{ background: '#fff', border: '1px solid var(--bank-border)', borderRadius: 12, padding: 20, marginBottom: 26 }}>
+      <div style={{ background: '#fff', border: '1px solid var(--bank-border)', borderRadius: 12, padding: 18, marginBottom: 26 }}>
         <Row label="To" value={beneficiary} />
         <Row label="Amount" value={`\u20a6${parseFloat(amount || 0).toLocaleString()}`} />
       </div>
@@ -165,19 +165,19 @@ function StepResult({ decision, onDone }) {
   }[decision.explanationSource] || 'Explanation'
 
   return (
-    <div style={{ textAlign: 'center', paddingTop: 60 }}>
+    <div style={{ textAlign: 'center', paddingTop: 56 }}>
       <div style={{
-        width: 80, height: 80, borderRadius: '50%', background: config.color,
-        color: '#fff', fontSize: 36, display: 'flex', alignItems: 'center', justifyContent: 'center',
-        margin: '0 auto 22px'
+        width: 76, height: 76, borderRadius: '50%', background: config.color,
+        color: '#fff', fontSize: 34, display: 'flex', alignItems: 'center', justifyContent: 'center',
+        margin: '0 auto 20px'
       }}>
         {config.icon}
       </div>
       <h2 style={h2}>{config.title}</h2>
-      <p style={{ color: 'var(--bank-ink-dim)', fontSize: 15, maxWidth: 280, margin: '14px auto 32px' }}>
+      <p style={{ color: 'var(--bank-ink-dim)', fontSize: 14, maxWidth: 280, margin: '12px auto 30px' }}>
         {decision.explanation || decision.message}
       </p>
-      <div style={{ fontSize: 12, color: 'var(--bank-ink-dim)', marginBottom: 18 }}>
+      <div style={{ fontSize: 11, color: 'var(--bank-ink-dim)', marginBottom: 16 }}>
         {sourceLabel}
       </div>
       <button onClick={onDone} style={primaryBtn}>Done</button>
@@ -187,15 +187,15 @@ function StepResult({ decision, onDone }) {
 
 function Row({ label, value }) {
   return (
-    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '9px 0', fontSize: 15 }}>
+    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', fontSize: 14 }}>
       <span style={{ color: 'var(--bank-ink-dim)' }}>{label}</span>
       <span style={{ fontWeight: 600 }}>{value}</span>
     </div>
   )
 }
 
-const h2 = { fontSize: 22, marginBottom: 18 }
-const backBtn = { background: 'none', border: 'none', color: 'var(--bank-ink-dim)', fontSize: 15, cursor: 'pointer', marginBottom: 16, padding: 0 }
-const inputStyle = { width: '100%', padding: '15px', borderRadius: 10, border: '1px solid var(--bank-border)', fontSize: 16 }
-const chipStyle = { background: '#fff', border: '1px solid var(--bank-border)', borderRadius: 20, padding: '9px 18px', fontSize: 14, marginRight: 9, cursor: 'pointer' }
-const primaryBtn = { width: '100%', padding: 16, background: 'var(--bank-orange)', color: '#fff', border: 'none', borderRadius: 10, fontSize: 16, fontWeight: 600, cursor: 'pointer' }
+const h2 = { fontSize: 24, fontWeight: 700, marginBottom: 18 }
+const backBtn = { background: 'none', border: 'none', color: 'var(--bank-ink-dim)', fontSize: 13, cursor: 'pointer', marginBottom: 14, padding: 0 }
+const inputStyle = { width: '100%', padding: '14px', borderRadius: 10, border: '1px solid var(--bank-border)', fontSize: 16 }
+const chipStyle = { background: '#fff', border: '1px solid var(--bank-border)', borderRadius: 20, padding: '8px 16px', fontSize: 13, marginRight: 8, cursor: 'pointer' }
+const primaryBtn = { width: '100%', padding: 15, background: 'var(--bank-orange)', color: '#fff', border: 'none', borderRadius: 10, fontSize: 16, fontWeight: 600, cursor: 'pointer' }
