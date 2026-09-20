@@ -1,0 +1,22 @@
+fastapi==0.115.0
+uvicorn[standard]==0.30.6
+psycopg2-binary==2.9.9
+redis==5.0.8
+sqlalchemy==2.0.35
+alembic==1.13.2
+pydantic==2.9.2
+python-multipart==0.0.9
+
+# Division 4 — Detection Core (model serving + offline training run in-container)
+numpy==1.26.4
+pandas==2.2.2
+scikit-learn==1.5.2
+xgboost==2.1.1
+joblib==1.4.2
+
+# Division 6 — AI Explainability (real SHAP + LLM explanation providers)
+shap==0.46.0
+requests==2.32.3
+
+# Division 8A — lightweight edge rate limiting (no Nginx container)
+slowapi==0.1.9

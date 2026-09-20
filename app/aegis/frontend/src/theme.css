@@ -1,0 +1,108 @@
+/*
+ * Division 9A — design tokens + two theme scopes.
+ *
+ *  .theme-ops   — the Aegis side: dark, dense, operational (a real SOC, not a
+ *                 consumer fintech app). Deep slate base, ONE cool accent,
+ *                 semantic red/amber/green reserved only for verdicts.
+ *  .theme-bank  — the consumer bank ("SEES HACK Bank"): light, warm, calm.
+ *                 Navy + a single orange action colour.
+ *
+ * The verdict colours are shared across both so a BLOCK looks the same to the
+ * customer as it does to the analyst — one visual language end to end.
+ */
+
+:root {
+  /* Verdict semantics — shared. Matched to the dot hexes used in the JS
+     (ALLOW #1B8A5A, CHALLENGE #D89614, BLOCK #D64550). */
+  --verdict-low: #1B8A5A;
+  --verdict-low-bg: rgba(27, 138, 90, 0.12);
+  --verdict-medium: #B9770E;
+  --verdict-medium-bg: rgba(216, 150, 20, 0.15);
+  --verdict-high: #D64550;
+  --verdict-high-bg: rgba(214, 69, 80, 0.13);
+
+  --font-display: 'Segoe UI', 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', 'SF Mono', 'Consolas', 'Menlo', monospace;
+
+  /* Ops (dark) */
+  --ops-bg: #0C1116;
+  --ops-panel: #131B23;
+  --ops-border: #253039;
+  --ops-text: #E6EDF3;
+  --ops-text-dim: #8A9BA8;
+  --ops-accent: #35E0C3;
+
+  /* Bank (light) */
+  --bank-bg: #F4F5F7;
+  --bank-navy-900: #14203A;
+  --bank-orange: #FF6A00;
+  --bank-ink: #1A1F29;
+  --bank-ink-dim: #6A7382;
+  --bank-border: #E2E5EA;
+}
+
+html, body, #root {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  font-family: var(--font-display);
+  color: var(--bank-ink);
+  background: var(--bank-bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---- Theme scopes ---- */
+
+.theme-ops {
+  background: var(--ops-bg);
+  color: var(--ops-text);
+  font-family: var(--font-display);
+}
+.theme-ops h1, .theme-ops h2, .theme-ops h3 {
+  color: var(--ops-text);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.theme-ops button { font-family: inherit; }
+
+.theme-bank {
+  background: var(--bank-bg);
+  color: var(--bank-ink);
+  font-family: var(--font-display);
+}
+.theme-bank h1, .theme-bank h2, .theme-bank h3 {
+  color: var(--bank-ink);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.theme-bank input {
+  font-family: inherit;
+  color: var(--bank-ink);
+  background: #fff;
+  box-sizing: border-box;
+}
+.theme-bank input::placeholder { color: var(--bank-ink-dim); }
+.theme-bank button { font-family: inherit; }
+
+/* ---- Shared utilities ---- */
+
+.mono { font-family: var(--font-mono); }
+
+.verdict-badge {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  padding: 3px 9px;
+  border-radius: 5px;
+  text-transform: uppercase;
+}
+.verdict-badge.verdict-high,   .verdict-high   { background: var(--verdict-high-bg);   color: var(--verdict-high); }
+.verdict-badge.verdict-medium, .verdict-medium { background: var(--verdict-medium-bg); color: var(--verdict-medium); }
+.verdict-badge.verdict-low,    .verdict-low    { background: var(--verdict-low-bg);    color: var(--verdict-low); }
+
+/* Landing's mock live-feed badge reads clearer with a touch more presence */
+.theme-ops .verdict-badge { font-size: 12px; padding: 4px 10px; }

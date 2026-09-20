@@ -1,0 +1,19 @@
+{
+  "precision": 0.6429,
+  "recall": 0.8571,
+  "false_positive_rate": 0.0249,
+  "pr_auc": 0.8818,
+  "roc_auc": 0.9888,
+  "threshold_used": 0.5,
+  "confusion_matrix": [
+    [
+      391,
+      10
+    ],
+    [
+      3,
+      18
+    ]
+  ],
+  "isolation_forest_mean_anomaly_score": 0.48
+}

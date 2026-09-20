@@ -1,0 +1,88 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: aegis_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: aegis
+      POSTGRES_PASSWORD: aegis_dev_pw
+      POSTGRES_DB: aegis
+    ports:
+      - "5432:5432"
+    volumes:
+      - aegis_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U aegis"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: aegis_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: ./backend
+    container_name: aegis_backend
+    restart: unless-stopped
+    # Division 6 — LLM provider keys (GEMINI_API_KEY, GROQ_API_KEY, OLLAMA_*).
+    # .env is gitignored; see .env.example for the shape.
+    env_file:
+      - ./.env
+    environment:
+      DATABASE_URL: postgresql://aegis:aegis_dev_pw@postgres:5432/aegis
+      REDIS_URL: redis://redis:6379/0
+      # Division 4 — where scoring.py loads the trained models from. Points at
+      # the ./ml bind mount below so a retrain on the host is picked up live
+      # without rebuilding the image.
+      AEGIS_MODEL_DIR: /app/ml/models
+      # Division 6 — the local Ollama fallback runs on the HOST, not in this
+      # container, so localhost won't reach it. Override the .env value.
+      OLLAMA_URL: http://host.docker.internal:11434
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+      # Division 4 — trained models (read at serve time) and the Division 3
+      # datasets (read by ml/train_models.py when training is run in-container).
+      - ./ml:/app/ml
+      - ./data:/app/data
+      # Division 7 — attack-simulator package, imported by app/routers/simulator.py
+      - ./simulator:/app/simulator
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: aegis_frontend
+    restart: unless-stopped
+    environment:
+      VITE_BACKEND_PROXY_TARGET: http://backend:8000
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+
+  # ml, simulator, and ops services (Suricata/Wazuh) will be added
+  # in Divisions 4, 7, and 8 respectively.
+
+volumes:
+  aegis_pg_data:

@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# Node / frontend (Division 9)
+node_modules/
+dist/
+.vite/
+
+# ML artifacts (Division 4)
+*.pkl
+*.joblib
+
+# Env / secrets
+.env
+.env.*
+!.env.example
+
+# Local export bundles (not source)
+aegis_export.zip
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editors
+.vscode/
+.idea/

@@ -1,0 +1,18 @@
+{
+  "n_users": 80,
+  "n_personas": 6,
+  "app_rows": 2101,
+  "app_positive_rate_pct": 4.81,
+  "ussd_rows": 2107,
+  "ussd_positive_rate_pct": 5.08,
+  "attack_archetypes": [
+    "CREDENTIAL_STUFFING",
+    "OTP_REPLAY",
+    "SIM_SWAP_TAKEOVER",
+    "COACHED_VICTIM",
+    "SLOW_DRIFT",
+    "IMPOSSIBLE_TRAVEL"
+  ],
+  "legitimate_anomaly_rate": 0.06,
+  "generated_at": "2026-09-06T10:16:42.496536"
+}

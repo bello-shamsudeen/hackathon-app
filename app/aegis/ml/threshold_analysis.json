@@ -1,0 +1,183 @@
+{
+  "fpr_budget": 0.05,
+  "thresholds_swept": [
+    0.2,
+    0.3,
+    0.4,
+    0.5,
+    0.6,
+    0.7,
+    0.8
+  ],
+  "channels": {
+    "app": {
+      "sweep": [
+        {
+          "threshold": 0.2,
+          "precision": 0.3409,
+          "recall": 0.75,
+          "false_positive_rate": 0.0723,
+          "tp": 15,
+          "fp": 29,
+          "fn": 5,
+          "tn": 372
+        },
+        {
+          "threshold": 0.3,
+          "precision": 0.4118,
+          "recall": 0.7,
+          "false_positive_rate": 0.0499,
+          "tp": 14,
+          "fp": 20,
+          "fn": 6,
+          "tn": 381
+        },
+        {
+          "threshold": 0.4,
+          "precision": 0.4667,
+          "recall": 0.7,
+          "false_positive_rate": 0.0399,
+          "tp": 14,
+          "fp": 16,
+          "fn": 6,
+          "tn": 385
+        },
+        {
+          "threshold": 0.5,
+          "precision": 0.5,
+          "recall": 0.65,
+          "false_positive_rate": 0.0324,
+          "tp": 13,
+          "fp": 13,
+          "fn": 7,
+          "tn": 388
+        },
+        {
+          "threshold": 0.6,
+          "precision": 0.5263,
+          "recall": 0.5,
+          "false_positive_rate": 0.0224,
+          "tp": 10,
+          "fp": 9,
+          "fn": 10,
+          "tn": 392
+        },
+        {
+          "threshold": 0.7,
+          "precision": 0.5556,
+          "recall": 0.5,
+          "false_positive_rate": 0.02,
+          "tp": 10,
+          "fp": 8,
+          "fn": 10,
+          "tn": 393
+        },
+        {
+          "threshold": 0.8,
+          "precision": 0.6667,
+          "recall": 0.5,
+          "false_positive_rate": 0.0125,
+          "tp": 10,
+          "fp": 5,
+          "fn": 10,
+          "tn": 396
+        }
+      ],
+      "chosen": {
+        "threshold": 0.4,
+        "precision": 0.4667,
+        "recall": 0.7,
+        "false_positive_rate": 0.0399,
+        "tp": 14,
+        "fp": 16,
+        "fn": 6,
+        "tn": 385
+      }
+    },
+    "ussd": {
+      "sweep": [
+        {
+          "threshold": 0.2,
+          "precision": 0.5455,
+          "recall": 0.8571,
+          "false_positive_rate": 0.0374,
+          "tp": 18,
+          "fp": 15,
+          "fn": 3,
+          "tn": 386
+        },
+        {
+          "threshold": 0.3,
+          "precision": 0.6207,
+          "recall": 0.8571,
+          "false_positive_rate": 0.0274,
+          "tp": 18,
+          "fp": 11,
+          "fn": 3,
+          "tn": 390
+        },
+        {
+          "threshold": 0.4,
+          "precision": 0.6429,
+          "recall": 0.8571,
+          "false_positive_rate": 0.0249,
+          "tp": 18,
+          "fp": 10,
+          "fn": 3,
+          "tn": 391
+        },
+        {
+          "threshold": 0.5,
+          "precision": 0.6429,
+          "recall": 0.8571,
+          "false_positive_rate": 0.0249,
+          "tp": 18,
+          "fp": 10,
+          "fn": 3,
+          "tn": 391
+        },
+        {
+          "threshold": 0.6,
+          "precision": 0.6667,
+          "recall": 0.8571,
+          "false_positive_rate": 0.0224,
+          "tp": 18,
+          "fp": 9,
+          "fn": 3,
+          "tn": 392
+        },
+        {
+          "threshold": 0.7,
+          "precision": 0.6923,
+          "recall": 0.8571,
+          "false_positive_rate": 0.02,
+          "tp": 18,
+          "fp": 8,
+          "fn": 3,
+          "tn": 393
+        },
+        {
+          "threshold": 0.8,
+          "precision": 0.7391,
+          "recall": 0.8095,
+          "false_positive_rate": 0.015,
+          "tp": 17,
+          "fp": 6,
+          "fn": 4,
+          "tn": 395
+        }
+      ],
+      "chosen": {
+        "threshold": 0.7,
+        "precision": 0.6923,
+        "recall": 0.8571,
+        "false_positive_rate": 0.02,
+        "tp": 18,
+        "fp": 8,
+        "fn": 3,
+        "tn": 393
+      }
+    }
+  },
+  "rationale": "Operating threshold per channel = highest recall whose false-positive rate stays <= 5% on the held-out test split, tie-broken on precision. FPR is the constraint because every false positive is a good customer getting challenged; recall is the objective because a missed takeover is the expensive miss. The live scorer blends this XGBoost probability with the Isolation Forest anomaly score into a 0-100 risk_score; these thresholds define where the supervised model alone would draw the line and are the reference point for the decision engine's 30/70 tier cuts."
+}
