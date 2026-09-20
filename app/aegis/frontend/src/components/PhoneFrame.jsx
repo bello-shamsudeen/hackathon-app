@@ -1,9 +1,14 @@
 /**
- * Division 9A-revised — PhoneFrame.
+ * Division 9A-revised - PhoneFrame.
  * Wraps bank screens in a stylized phone frame so the whole experience
- * reads as "real app" rather than "web form" — the single biggest visual
+ * reads as "real app" rather than "web form" - the single biggest visual
  * move for the startup-demo feel. Bottom nav is part of the frame itself
  * so every wrapped screen gets consistent navigation for free.
+ *
+ * Responsive: on real phones (max-width: 480px) the frame fills the
+ * actual viewport instead of rendering as a fixed 390x780 mockup inside
+ * a dark gutter - that fixed-size mockup is only meant to be seen on a
+ * wider (desktop/tablet) browser.
  */
 import { useNavigate, useLocation } from 'react-router-dom'
 
@@ -14,16 +19,43 @@ export default function PhoneFrame({ children, showNav = true }) {
   const isActive = (path) => location.pathname === path
 
   return (
-    <div style={{
-      minHeight: '100vh', background: 'var(--bank-navy-900)',
-      display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24
-    }}>
-      <div style={{
-        width: 390, height: 780, background: 'var(--bank-bg)', borderRadius: 36,
-        boxShadow: '0 30px 80px rgba(0,0,0,0.5)', overflow: 'hidden',
-        display: 'flex', flexDirection: 'column', position: 'relative',
-        border: '10px solid #0A0A0A'
-      }}>
+    <div className="phone-frame-wrapper">
+      <style>{`
+        .phone-frame-wrapper {
+          min-height: 100vh;
+          background: var(--bank-navy-900);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 24px;
+        }
+        .phone-frame {
+          width: 390px;
+          height: 780px;
+          background: var(--bank-bg);
+          border-radius: 36px;
+          box-shadow: 0 30px 80px rgba(0,0,0,0.5);
+          overflow: hidden;
+          display: flex;
+          flex-direction: column;
+          position: relative;
+          border: 10px solid #0A0A0A;
+        }
+        @media (max-width: 480px) {
+          .phone-frame-wrapper {
+            padding: 0;
+            min-height: 100dvh;
+          }
+          .phone-frame {
+            width: 100%;
+            height: 100dvh;
+            border-radius: 0;
+            border: none;
+            box-shadow: none;
+          }
+        }
+      `}</style>
+      <div className="phone-frame">
         <div style={{ flex: 1, overflowY: 'auto' }}>
           {children}
         </div>
