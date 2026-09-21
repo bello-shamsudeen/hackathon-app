@@ -20,3 +20,4 @@ requests==2.32.3
 
 # Division 8A — lightweight edge rate limiting (no Nginx container)
 slowapi==0.1.9
+psycopg2-binary==2.9.9
