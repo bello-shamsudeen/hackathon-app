@@ -39,9 +39,9 @@ export function VideoPlaceholder() {
 
 export function FoundersSection() {
   return (
-    <section style={{ maxWidth: 900, margin: '0 auto', padding: '0 48px 100px' }}>
+    <section className="founders-section" style={{ maxWidth: 900, margin: '0 auto', padding: '0 48px 100px' }}>
       <h2 style={{ fontSize: 28, marginBottom: 40 }}>Built by</h2>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 24 }}>
+      <div className="founders-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 24 }}>
         {FOUNDERS.map((f, i) => (
           <div key={f.name} style={{
             border: '1px solid var(--ops-border)', borderRadius: 12, padding: 24, textAlign: 'center'
@@ -58,6 +58,18 @@ export function FoundersSection() {
           </div>
         ))}
       </div>
+      <style>{`
+        @media (max-width: 768px) {
+          .founders-section {
+            padding-left: 20px !important;
+            padding-right: 20px !important;
+          }
+          .founders-grid {
+            grid-template-columns: 1fr !important;
+            gap: 16px !important;
+          }
+        }
+      `}</style>
     </section>
   )
 }

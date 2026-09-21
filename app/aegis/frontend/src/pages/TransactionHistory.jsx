@@ -30,9 +30,9 @@ export default function TransactionHistory({ session }) {
   return (
     <PhoneFrame>
       <div style={{ padding: 20 }}>
-        <h2 style={{ fontSize: 20, marginBottom: 16 }}>Transaction history</h2>
+        <h2 style={{ fontSize: 24, fontWeight: 700, marginBottom: 18 }}>Transaction history</h2>
 
-        <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
+        <div style={{ display: 'flex', gap: 8, marginBottom: 22 }}>
           {FILTERS.map(f => (
             <button
               key={f} onClick={() => setFilter(f)}
@@ -49,23 +49,23 @@ export default function TransactionHistory({ session }) {
         </div>
 
         {Object.entries(grouped).map(([date, txs]) => (
-          <div key={date} style={{ marginBottom: 18 }}>
+          <div key={date} style={{ marginBottom: 20 }}>
             <div style={{ fontSize: 11, color: 'var(--bank-ink-dim)', marginBottom: 8 }}>{date}</div>
             {txs.map(tx => (
               <button
                 key={tx.id} onClick={() => setSelected(tx)}
                 style={{
                   width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                  padding: '12px 0', borderBottom: '1px solid var(--bank-border)', background: 'none',
+                  padding: '13px 0', borderBottom: '1px solid var(--bank-border)', background: 'none',
                   border: 'none', borderBottomWidth: 1, borderBottomStyle: 'solid', borderBottomColor: 'var(--bank-border)',
                   cursor: 'pointer', textAlign: 'left'
                 }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <span style={{ width: 8, height: 8, borderRadius: '50%', background: VERDICT_DOT[tx.verdict] || VERDICT_DOT.ALLOW }} />
-                  <span style={{ fontSize: 13 }}>{tx.beneficiary_account}</span>
+                  <span style={{ width: 9, height: 9, borderRadius: '50%', background: VERDICT_DOT[tx.verdict] || VERDICT_DOT.ALLOW }} />
+                  <span style={{ fontSize: 14 }}>{tx.beneficiary_account}</span>
                 </div>
-                <span style={{ fontSize: 13, fontWeight: 600 }} className="mono">-&#8358;{tx.amount.toLocaleString()}</span>
+                <span style={{ fontSize: 14, fontWeight: 600 }} className="mono">-&#8358;{tx.amount.toLocaleString()}</span>
               </button>
             ))}
           </div>
@@ -93,12 +93,12 @@ export default function TransactionHistory({ session }) {
             }}>
               {selected.verdict}
             </span>
-            <div style={{ fontSize: 24, fontWeight: 700, margin: '14px 0 6px', fontFamily: 'var(--font-display)' }}>
+            <div style={{ fontSize: 28, fontWeight: 700, margin: '14px 0 6px', fontFamily: 'var(--font-display)' }}>
               &#8358;{selected.amount.toLocaleString()}
             </div>
             <div style={{ fontSize: 13, color: 'var(--bank-ink-dim)', marginBottom: 14 }}>To {selected.beneficiary_account}</div>
             {selected.message && (
-              <p style={{ fontSize: 13, color: 'var(--bank-ink)', background: 'var(--bank-bg)', padding: 12, borderRadius: 8 }}>
+              <p style={{ fontSize: 14, color: 'var(--bank-ink)', background: 'var(--bank-bg)', padding: 12, borderRadius: 8 }}>
                 {selected.message}
               </p>
             )}

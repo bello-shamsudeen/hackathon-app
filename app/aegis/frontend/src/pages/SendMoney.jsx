@@ -95,13 +95,13 @@ function StepAmount({ amount, setAmount, capture, onNext }) {
   return (
     <div>
       <h2 style={h2}>Amount</h2>
-      <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, margin: '30px 0' }}>
-        <span style={{ fontSize: 28, color: 'var(--bank-ink-dim)' }}>&#8358;</span>
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, margin: '32px 0' }}>
+        <span style={{ fontSize: 26, color: 'var(--bank-ink-dim)' }}>&#8358;</span>
         <input
           value={amount} onChange={(e) => setAmount(e.target.value)}
           onKeyDown={capture.onKeyDown} onKeyUp={capture.onKeyUp} onPaste={capture.onPaste}
           placeholder="0" autoFocus
-          style={{ border: 'none', fontSize: 40, fontFamily: 'var(--font-display)', fontWeight: 700, width: '100%', outline: 'none' }}
+          style={{ border: 'none', fontSize: 46, fontFamily: 'var(--font-display)', fontWeight: 700, width: '100%', outline: 'none' }}
         />
       </div>
       <button disabled={!amount} onClick={onNext} style={{ ...primaryBtn, opacity: amount ? 1 : 0.4 }}>
@@ -115,7 +115,7 @@ function StepReview({ beneficiary, amount, loading, onConfirm, honeytoken, setHo
   return (
     <div>
       <h2 style={h2}>Review</h2>
-      <div style={{ background: '#fff', border: '1px solid var(--bank-border)', borderRadius: 12, padding: 18, marginBottom: 24 }}>
+      <div style={{ background: '#fff', border: '1px solid var(--bank-border)', borderRadius: 12, padding: 18, marginBottom: 26 }}>
         <Row label="To" value={beneficiary} />
         <Row label="Amount" value={`\u20a6${parseFloat(amount || 0).toLocaleString()}`} />
       </div>
@@ -150,10 +150,10 @@ function StepResult({ decision, onDone }) {
   }[decision.explanationSource] || 'Explanation'
 
   return (
-    <div style={{ textAlign: 'center', paddingTop: 60 }}>
+    <div style={{ textAlign: 'center', paddingTop: 56 }}>
       <div style={{
-        width: 72, height: 72, borderRadius: '50%', background: config.color,
-        color: '#fff', fontSize: 32, display: 'flex', alignItems: 'center', justifyContent: 'center',
+        width: 76, height: 76, borderRadius: '50%', background: config.color,
+        color: '#fff', fontSize: 34, display: 'flex', alignItems: 'center', justifyContent: 'center',
         margin: '0 auto 20px'
       }}>
         {config.icon}
@@ -179,8 +179,8 @@ function Row({ label, value }) {
   )
 }
 
-const h2 = { fontSize: 20, marginBottom: 16 }
-const backBtn = { background: 'none', border: 'none', color: 'var(--bank-ink-dim)', fontSize: 14, cursor: 'pointer', marginBottom: 14, padding: 0 }
+const h2 = { fontSize: 24, fontWeight: 700, marginBottom: 18 }
+const backBtn = { background: 'none', border: 'none', color: 'var(--bank-ink-dim)', fontSize: 13, cursor: 'pointer', marginBottom: 14, padding: 0 }
 const inputStyle = { width: '100%', padding: '14px', borderRadius: 10, border: '1px solid var(--bank-border)', fontSize: 16 }
 const chipStyle = { background: '#fff', border: '1px solid var(--bank-border)', borderRadius: 20, padding: '8px 16px', fontSize: 13, marginRight: 8, cursor: 'pointer' }
-const primaryBtn = { width: '100%', padding: 15, background: 'var(--bank-orange)', color: '#fff', border: 'none', borderRadius: 10, fontSize: 15, fontWeight: 600, cursor: 'pointer' }
+const primaryBtn = { width: '100%', padding: 15, background: 'var(--bank-orange)', color: '#fff', border: 'none', borderRadius: 10, fontSize: 16, fontWeight: 600, cursor: 'pointer' }
