@@ -10,6 +10,7 @@ from datetime import datetime
 
 from app.services.memory_store import (
     get_user_by_msisdn, create_session, get_session, log_transaction, verify_pin,
+    clear_freshly_registered,
 )
 from app.models.schemas import (
     LoginRequest, LoginResponse, TransferRequest, TransferResponse,
@@ -30,12 +31,19 @@ def login(req: LoginRequest):
     if not verify_pin(user, req.pin):
         raise HTTPException(status_code=401, detail="Incorrect PIN.")
 
+    # Capture the flag BEFORE clearing it, so this first login still reports
+    # True (cold-start hint shows once) - every login after this one reports
+    # False, since the column is cleared right below.
+    was_freshly_registered = user.get("is_freshly_registered", False)
+    if was_freshly_registered:
+        clear_freshly_registered(str(user["id"]))
+
     session_id = create_session(str(user["id"]), "WEB", req.device_fingerprint)
 
     return LoginResponse(
         session_id=session_id, user_id=str(user["id"]), full_name=user["full_name"],
         account_number=user.get("account_number"), avatar_data_url=user.get("avatar_data_url"),
-        is_freshly_registered=user.get("is_freshly_registered", False),
+        is_freshly_registered=was_freshly_registered,
     )
 
 
