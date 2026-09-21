@@ -66,7 +66,7 @@ export default function Login({ onLogin }) {
           <input
             type="password" value={pin} onChange={(e) => setPin(e.target.value)}
             onKeyDown={capture.onKeyDown} onKeyUp={capture.onKeyUp} onPaste={capture.onPaste}
-            placeholder="\u2022\u2022\u2022\u2022" style={inputStyle}
+            placeholder="••••" style={inputStyle}
           />
 
           {error && <p style={{ color: 'var(--verdict-high)', fontSize: 13, marginTop: 14 }}>{error}</p>}
