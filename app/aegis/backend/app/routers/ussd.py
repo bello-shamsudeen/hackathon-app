@@ -14,11 +14,6 @@ router = APIRouter(prefix="/ussd", tags=["ussd"])
 USSD_SESSION_NAMESPACE = uuid.UUID("6f9619ff-8b86-d011-b42d-00c04fc964ff")
 _ussd_events: list[dict] = []
 
-# Maps the deterministic per-aggregator-session UUID to the real memory_store
-# session id, since create_session() always mints its own id internally and
-# has no way to be told to use a specific one. Keeping this mapping local to
-# this router avoids touching memory_store.create_session(), which every
-# other channel (app login, registration) also depends on.
 _session_map: dict[str, str] = {}
 
 
@@ -41,11 +36,6 @@ def ussd_handler(req: USSDRequest):
         "id": str(uuid.uuid4()), "session_id": real_session_id,
         "menu_step": req.text, "recorded_at": datetime.utcnow(),
     })
-
-    # retry_count/timeout_count: no retry or timeout detection exists yet in
-    # this menu logic, so both are recorded as 0 for now. This is a known,
-    # separate feature gap, not a functioning signal - flagged, not invented.
-    log_ussd_event(real_session_id, retry_count=0, timeout_count=0)
 
     steps = req.text.split("*") if req.text else []
 
@@ -92,5 +82,14 @@ def ussd_handler(req: USSDRequest):
         response_text = "END PIN change is not available in this demo."
     else:
         response_text = "END Invalid option."
+
+    # retry_count: a real, live-triggerable retry signal. Fires when the user
+    # actually mistypes a menu selection (an invalid main-menu option, or an
+    # invalid step within the Send Money flow) - genuine user error, not a
+    # fabricated signal. PIN/timeout retry detection remains a known gap
+    # (no PIN validation exists in this simplified flow at all), documented
+    # separately - this only covers the menu-navigation-error case.
+    is_retry = response_text in ("END Invalid input.", "END Invalid option.")
+    log_ussd_event(real_session_id, retry_count=1 if is_retry else 0, timeout_count=0)
 
     return Response(content=response_text, media_type="text/plain")

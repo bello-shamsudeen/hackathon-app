@@ -1,15 +1,15 @@
 """
 Division 2 - the fake bank's core endpoints (WEB channel).
-Restored to the full Division 2/4/5/8 version (velocity, hard controls,
-honeytoken, token consumption, inline detection) after an earlier accidental
-overwrite with a simplified draft. Postgres calls replaced with memory_store.
+Postgres calls replaced with memory_store. login() now actually verifies
+the submitted PIN against the stored hash - previously req.pin was accepted
+into the request model but never read or checked anywhere.
 """
 from fastapi import APIRouter, HTTPException
 import uuid
 from datetime import datetime
 
 from app.services.memory_store import (
-    get_user_by_msisdn, create_session, get_session, log_transaction,
+    get_user_by_msisdn, create_session, get_session, log_transaction, verify_pin,
 )
 from app.models.schemas import (
     LoginRequest, LoginResponse, TransferRequest, TransferResponse,
@@ -27,8 +27,10 @@ def login(req: LoginRequest):
     user = get_user_by_msisdn(req.msisdn)
     if not user:
         raise HTTPException(status_code=401, detail="Unknown user (no synthetic data loaded yet?)")
+    if not verify_pin(user, req.pin):
+        raise HTTPException(status_code=401, detail="Incorrect PIN.")
 
-    session_id = create_session(user["id"], "WEB", req.device_fingerprint)
+    session_id = create_session(str(user["id"]), "WEB", req.device_fingerprint)
 
     return LoginResponse(
         session_id=session_id, user_id=str(user["id"]), full_name=user["full_name"],

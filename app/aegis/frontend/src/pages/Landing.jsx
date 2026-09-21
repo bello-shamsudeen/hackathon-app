@@ -67,6 +67,7 @@ export default function Landing({ onLogin }) {
             <button onClick={() => navigate('/register')} style={secondaryBtn}>Register your own account</button>
           </div>
           <div style={{ display: 'flex', gap: 16 }}>
+            <button onClick={() => navigate('/bank')} style={linkBtn}>Log in</button>
             <button onClick={() => navigate('/ops')} style={linkBtn}>View Aegis Console</button>
             <button onClick={() => navigate('/tour')} style={linkBtn}>Take the guided tour</button>
           </div>

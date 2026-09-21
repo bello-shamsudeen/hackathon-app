@@ -1,14 +1,19 @@
 """
-Division 9A — registration, profile, and transaction history.
+Division 9A - registration, profile, and transaction history.
 
 The registration flow deliberately creates a genuinely fresh user with zero
-prior session history, then opens ONE web session for them — this is what
+prior session history, then opens ONE web session for them - this is what
 makes the cold-start guardrail (Division 5, Guardrail 2) demonstrable live by
 anyone who registers, not just something described. A first-ever large
 transfer from this account is scored against <5 sessions of history, so the
 guardrail caps it away from an outright BLOCK to a step-up.
 
-Backed by the in-memory store (memory_store.py) rather than Postgres.
+Backed by real SQLite persistence (memory_store.py). Registration now
+requires a real pin, hashed and stored - login actually checks it (see
+bank.py). TELCO_STATE and DECISIONS are no longer importable module-level
+objects (they live in the database now), so this file uses the real
+memory_store functions (set_telco_state, get_latest_decision_for_transaction)
+instead of the direct dict access the pre-persistence version relied on.
 """
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
@@ -21,8 +26,8 @@ from app.services.memory_store import (
     get_user_by_id,
     create_session,
     get_transactions_for_user,
-    TELCO_STATE,
-    DECISIONS,
+    set_telco_state,
+    get_latest_decision_for_transaction,
 )
 
 router = APIRouter(prefix="/bank", tags=["profile"])
@@ -31,6 +36,7 @@ router = APIRouter(prefix="/bank", tags=["profile"])
 class RegisterRequest(BaseModel):
     full_name: str
     phone_number: str
+    pin: str
     nin: str
     bvn: str
     avatar_data_url: Optional[str] = None  # base64 image, or None for initials fallback
@@ -39,28 +45,29 @@ class RegisterRequest(BaseModel):
 def _mask(value: str, keep_last: int = 4) -> str:
     if not value or len(value) <= keep_last:
         return value
-    return "•" * (len(value) - keep_last) + value[-keep_last:]
+    return "*" * (len(value) - keep_last) + value[-keep_last:]
 
 
 @router.post("/register")
 def register(req: RegisterRequest):
     account_number = str(uuid.uuid4().int)[:10]
-    user = create_user(
-        req.full_name, req.phone_number, account_number,
-        req.nin, req.bvn, req.avatar_data_url,
-    )
+    try:
+        user = create_user(
+            req.full_name, req.phone_number, account_number,
+            req.nin, req.bvn, req.pin, req.avatar_data_url,
+        )
+    except Exception as exc:
+        raise HTTPException(status_code=409, detail="That phone number is already registered.")
     user_id = str(user["id"])
 
-    # A genuinely fresh telco_state row too — first-ever device, no swap history.
-    TELCO_STATE[user_id] = {
-        "imei": f"IMEI-{uuid.uuid4().hex[:14]}",
-        "sim_device_paired": True,
-        "last_sim_swap_at": None,
-    }
+    # A genuinely fresh telco_state row too - first-ever device, no swap history.
+    set_telco_state(
+        user_id,
+        imei=f"IMEI-{uuid.uuid4().hex[:14]}",
+        sim_device_paired=True,
+        last_sim_swap_at=None,
+    )
 
-    # Open ONE web session for the new user so the consumer app has a session
-    # to score against immediately after registration. This is the entire
-    # session history for this account — exactly the cold-start condition.
     session_id = create_session(user_id, "WEB", f"reg-{user_id}")
 
     return {
@@ -100,17 +107,14 @@ def get_transaction_history(user_id: str):
     """
     Returns transactions joined with their decision verdict, so the frontend
     can show the same green/amber/red dot language used on the Aegis operator
-    side — one consistent visual system across both apps. For each
-    transaction, the latest DECISIONS entry sharing its session_id (by
-    decided_at) supplies the verdict/message, mirroring the original
-    LEFT JOIN ... ORDER BY decided_at DESC behavior.
+    side. For each transaction, get_latest_decision_for_transaction (a real
+    SQL query, not a raw-list scan) supplies the verdict/message.
     """
     transactions = get_transactions_for_user(user_id)
 
     txns = []
     for t in transactions:
-        matching_decisions = [d for d in DECISIONS if d["transaction_id"] == t["id"]]
-        latest_decision = max(matching_decisions, key=lambda d: d["decided_at"]) if matching_decisions else None
+        latest_decision = get_latest_decision_for_transaction(t["id"])
 
         txns.append({
             "id": str(t["id"]),
