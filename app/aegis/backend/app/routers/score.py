@@ -254,3 +254,59 @@ def score_session(session_id: str, *, current_imei: str = None,
 @router.post("/session/{session_id}")
 def score_session_endpoint(session_id: str):
     return score_session(session_id)
+
+# Division 4E console - direct, read-only access to the rules-based fallback
+# engine so the offline safety net can be exercised on demand. Same verdict
+# contract as the automatic path; nothing is written to the decisions table.
+@router.get("/manual")
+def manual_engine(amount: float, channel: str = "app"):
+    if channel not in ("app", "ussd"):
+        raise HTTPException(status_code=400, detail="channel must be 'app' or 'ussd'")
+    return rules_verdict("manual-console", channel, amount)
+
+
+# Division 4E engine status - read-only probe of the primary RandomForest
+# model path (Brief A: models/app_model.pkl + models/ussd_model.pkl) so the
+# frontend can show whether the rules fallback (Brief B Rule 6 - offline/
+# degraded mode) is ACTIVELY serving or armed standby. The verdict combines:
+#   (a) model-file health - the RF pickles exist and are loadable, and
+#   (b) live scoring_health state - "degraded" if the ML path recently failed.
+# Read-only: nothing is scored and nothing is written, same as /manual.
+@router.get("/engine-status")
+def engine_status():
+    from pathlib import Path
+    here = Path(__file__).resolve()
+    models_dir = None
+    for parent in here.parents:
+        candidate = parent / "models"
+        if (candidate / "app_model.pkl").exists() or (candidate / "ussd_model.pkl").exists():
+            models_dir = candidate
+            break
+
+    model_files = {}
+    model_files_ok = True
+    for name in ("app_model.pkl", "ussd_model.pkl"):
+        path = (models_dir / name) if models_dir else None
+        status = "missing"
+        if path is not None and path.exists():
+            try:
+                import joblib
+                joblib.load(path)
+                status = "ok"
+            except Exception as exc:  # noqa: BLE001 - corrupt/unloadable pickle
+                status = f"corrupt: {type(exc).__name__}"
+        model_files[name] = status
+        if status != "ok":
+            model_files_ok = False
+
+    health = scoring_health.get_state()
+    degraded = isinstance(health, dict) and health.get("mode") == "degraded"
+
+    return {
+        "primary_model": "random_forest",
+        "fallback_engine": "rules_fallback (Brief B Rule 6)",
+        "model_files_ok": model_files_ok,
+        "model_files": model_files,
+        "scoring_health": health,
+        "fallback_active": (not model_files_ok) or degraded,
+    }

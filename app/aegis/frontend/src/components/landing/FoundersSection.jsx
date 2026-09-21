@@ -1,11 +1,4 @@
-/**
- * Division 9A — Video placeholder + Founders.
- * Video slot is clearly presented as reserved space, not a broken embed.
- * Founder cards stay deliberately quiet/restrained by contrast to the
- * animated feature panels above — that contrast is itself the design
- * choice ("spend your boldness in one place").
- */
-const FOUNDERS = [
+﻿const FOUNDERS = [
   { name: 'Alebiosu Kareem', role: 'Product Design & Integration' },
   { name: 'Shamsudeen Bello', role: 'Backend Lead' },
   { name: 'Divine Ezeh', role: 'ML / Detection' },
@@ -15,26 +8,6 @@ const COLORS = ['#FF6A00', '#4FD1C5', '#6E5AC8']
 
 function initials(name) {
   return name.split(' ').slice(0, 2).map(p => p[0]).join('')
-}
-
-export function VideoPlaceholder() {
-  return (
-    <section style={{ maxWidth: 900, margin: '0 auto', padding: '0 48px 80px' }}>
-      <div style={{
-        aspectRatio: '16/9', background: 'var(--ops-panel)', border: '1px dashed var(--ops-border)',
-        borderRadius: 14, display: 'flex', flexDirection: 'column', alignItems: 'center',
-        justifyContent: 'center', gap: 12
-      }}>
-        <div style={{
-          width: 56, height: 56, borderRadius: '50%', background: 'var(--ops-accent)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, color: '#04201D'
-        }}>
-          &#9654;
-        </div>
-        <div style={{ color: 'var(--ops-text-dim)', fontSize: 13 }}>Full demo walkthrough &mdash; video coming soon</div>
-      </div>
-    </section>
-  )
 }
 
 export function FoundersSection() {

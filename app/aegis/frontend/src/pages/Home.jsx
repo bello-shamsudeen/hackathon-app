@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+﻿import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import PhoneFrame from '../components/PhoneFrame'
 import Avatar from '../components/Avatar'
@@ -58,12 +58,11 @@ export default function Home({ session, showColdStartHint, dismissColdStartHint 
           </div>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 10, marginBottom: 28 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, marginBottom: 28 }}>
           <Tile label="Send" icon="&#8593;" onClick={() => navigate('/bank/send')} />
           <Tile label="Airtime" icon="&#128241;" />
           <Tile label="Bills" icon="&#128196;" />
           <Tile label="History" icon="&#128337;" onClick={() => navigate('/bank/history')} />
-          <Tile label="USSD Demo" icon="&#128222;" onClick={() => navigate('/bank/ussd')} />
         </div>
 
         <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'var(--bank-ink-dim)', marginBottom: 18 }}>

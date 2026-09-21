@@ -331,6 +331,17 @@ def create_user(full_name: str, msisdn: str, account_number: str, nin: str, bvn:
     }
 
 
+def clear_freshly_registered(user_id: str) -> None:
+    """Called once, on a user's first successful login after registration.
+    is_freshly_registered is set to 1 only at INSERT time in create_user()
+    and was never being cleared - meaning every login for that user kept
+    reporting True forever, not just the first one. This flips it to 0 so
+    the flag (and the frontend's cold-start hint it drives) only fires once."""
+    with _conn() as conn:
+        _run(conn, "UPDATE users SET is_freshly_registered = 0 WHERE id = ?", (user_id,))
+        conn.commit()
+
+
 def create_session(user_id: str, channel: str, device_fingerprint: str, ip_address: str = None) -> str:
     session_id = _gen_id()
     with _conn() as conn:
