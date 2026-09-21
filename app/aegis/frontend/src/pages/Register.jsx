@@ -75,7 +75,7 @@ function StepOne({ fullName, setFullName, phone, setPhone, pin, setPin, onNext }
       <p style={subtitle}>Simulated account &#8226; made-up data only</p>
       <Field label="Full name" value={fullName} onChange={setFullName} placeholder="e.g. Sees Hacks" />
       <Field label="Phone number" value={phone} onChange={setPhone} placeholder="080XXXXXXXX" />
-      <Field label="Choose a 4-digit PIN" value={pin} onChange={(v) => setPin(v.replace(/\D/g, '').slice(0, 4))} placeholder="0000" type="password" inputMode="numeric" />
+      <Field label="Choose a 4-digit PIN" value={pin} onChange={(v) => setPin(v.replace(/\D/g, '').slice(0, 4))} placeholder="1234" type="password" inputMode="numeric" />
       <button disabled={!fullName || !phone || pin.length !== 4} onClick={onNext} style={{ ...btn, opacity: fullName && phone && pin.length === 4 ? 1 : 0.4 }}>
         Continue
       </button>

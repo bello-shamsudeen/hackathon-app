@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import FeatureShowcase from '../components/landing/FeatureShowcase'
 import FAQSection from '../components/landing/FAQSection'
-import { VideoPlaceholder, FoundersSection } from '../components/landing/FoundersSection'
+import { FoundersSection } from '../components/landing/FoundersSection'
 
 export default function Landing({ onLogin }) {
   const navigate = useNavigate()
@@ -19,7 +19,7 @@ export default function Landing({ onLogin }) {
     const res = await fetch('/bank/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ msisdn: '08012345678', pin: '0000', device_fingerprint: 'demo-entry' })
+      body: JSON.stringify({ msisdn: '08012345678', pin: '1234', device_fingerprint: 'demo-entry' })
     })
     const data = await res.json()
     onLogin(data)
@@ -40,9 +40,7 @@ export default function Landing({ onLogin }) {
         .landing-h1 { font-size: 44px; line-height: 1.15; margin-bottom: 20px; max-width: 480px; }
         @media (max-width: 768px) {
           .landing-header { padding: 16px 20px; }
-          .landing-hero {
-            grid-template-columns: 1fr; gap: 32px; padding: 24px;
-          }
+          .landing-hero { grid-template-columns: 1fr; gap: 32px; padding: 24px; }
           .landing-h1 { font-size: 28px; max-width: 100%; }
         }
       `}</style>
@@ -52,7 +50,6 @@ export default function Landing({ onLogin }) {
         <div style={{ color: 'var(--ops-text-dim)', fontSize: 14 }}>Built by SEES HACK for ICSC 2026</div>
       </header>
 
-      {/* Hero */}
       <main className="landing-hero">
         <div>
           <h1 className="landing-h1">
@@ -62,14 +59,10 @@ export default function Landing({ onLogin }) {
             A behavioural trust engine for account takeover &mdash; watching how
             a transaction happens, not just whether the PIN was right.
           </p>
-          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 14 }}>
+          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
             <button onClick={handleDemoLogin} style={primaryBtn}>Try the SEES HACKS demo account</button>
             <button onClick={() => navigate('/register')} style={secondaryBtn}>Register your own account</button>
-          </div>
-          <div style={{ display: 'flex', gap: 16 }}>
-            <button onClick={() => navigate('/bank')} style={linkBtn}>Log in</button>
-            <button onClick={() => navigate('/ops')} style={linkBtn}>View Aegis Console</button>
-            <button onClick={() => navigate('/tour')} style={linkBtn}>Take the guided tour</button>
+            <button onClick={() => navigate('/bank')} style={secondaryBtn}>Log in</button>
           </div>
         </div>
 
@@ -96,7 +89,6 @@ export default function Landing({ onLogin }) {
       </main>
 
       <FeatureShowcase />
-      <VideoPlaceholder />
       <FAQSection />
       <FoundersSection />
 
@@ -109,4 +101,3 @@ export default function Landing({ onLogin }) {
 
 const primaryBtn = { background: 'var(--ops-accent)', color: '#04201D', border: 'none', padding: '14px 22px', borderRadius: 8, fontSize: 15, fontWeight: 600, cursor: 'pointer' }
 const secondaryBtn = { background: 'transparent', color: 'var(--ops-text)', border: '1px solid var(--ops-border)', padding: '14px 22px', borderRadius: 8, fontSize: 15, fontWeight: 600, cursor: 'pointer' }
-const linkBtn = { background: 'none', border: 'none', color: 'var(--ops-accent)', fontSize: 14, cursor: 'pointer', padding: 0, textDecoration: 'underline' }

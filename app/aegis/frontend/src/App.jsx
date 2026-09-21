@@ -8,23 +8,8 @@ import SendMoney from './pages/SendMoney'
 import TransactionHistory from './pages/TransactionHistory'
 import Profile from './pages/Profile'
 import UssdSimulator from './pages/UssdSimulator'
-
-function OpsPlaceholder() {
-  return (
-    <div className="theme-ops" style={{ minHeight: '100vh', padding: 48 }}>
-      <h1>Aegis Operations Console</h1>
-      <p style={{ color: 'var(--ops-text-dim)' }}>Coming in Division 9B.</p>
-    </div>
-  )
-}
-function TourPlaceholder() {
-  return (
-    <div className="theme-ops" style={{ minHeight: '100vh', padding: 48 }}>
-      <h1>Guided Tour</h1>
-      <p style={{ color: 'var(--ops-text-dim)' }}>Coming in Division 9C.</p>
-    </div>
-  )
-}
+import ManualEngine from './pages/ManualEngine'
+import DemoHub from './components/DemoHub'
 
 export default function App() {
   const [session, setSession] = useState(null)
@@ -41,15 +26,16 @@ export default function App() {
         <Route path="/" element={<Landing onLogin={handleLogin} />} />
         <Route path="/register" element={<Register onRegistered={handleLogin} />} />
         <Route path="/bank" element={<Login onLogin={handleLogin} />} />
-        <Route path="/bank/home" element={
-          <Home session={session} showColdStartHint={showColdStartHint} dismissColdStartHint={() => setShowColdStartHint(false)} />
-        } />
-        <Route path="/bank/send" element={<SendMoney session={session} />} />
-        <Route path="/bank/history" element={<TransactionHistory session={session} />} />
-        <Route path="/bank/profile" element={<Profile session={session} />} />
-        <Route path="/bank/ussd" element={<UssdSimulator />} />
-        <Route path="/ops" element={<OpsPlaceholder />} />
-        <Route path="/tour" element={<TourPlaceholder />} />
+        <Route element={<DemoHub />}>
+          <Route path="/bank/home" element={
+            <Home session={session} showColdStartHint={showColdStartHint} dismissColdStartHint={() => setShowColdStartHint(false)} />
+          } />
+          <Route path="/bank/send" element={<SendMoney session={session} />} />
+          <Route path="/bank/history" element={<TransactionHistory session={session} />} />
+          <Route path="/bank/profile" element={<Profile session={session} />} />
+          <Route path="/bank/ussd" element={<UssdSimulator />} />
+          <Route path="/demo/manual" element={<ManualEngine session={session} />} />
+        </Route>
       </Routes>
     </BrowserRouter>
   )
