@@ -155,6 +155,7 @@ _DDL = """
         bvn TEXT,
         avatar_data_url TEXT,
         is_freshly_registered INTEGER DEFAULT 0,
+        balance REAL NOT NULL DEFAULT 500000,
         account_created_at TEXT NOT NULL
     );
     CREATE TABLE IF NOT EXISTS telco_state (
@@ -279,6 +280,44 @@ def _init_db():
 
 
 _init_db()
+
+
+def _migrate() -> None:
+    """Idempotent column migrations for EXISTING databases (local SQLite and
+    production Postgres alike): CREATE TABLE IF NOT EXISTS in _DDL is a no-op
+    against tables that already exist, so new columns on `users` must be added
+    here. Safe on every boot - once the column exists the check finds it and
+    does nothing."""
+    with _conn() as conn:
+        if _IS_PG:
+            cols = {r[0] for r in _run(conn,
+                "SELECT column_name FROM information_schema.columns WHERE table_name = 'users'").fetchall()}
+        else:
+            cols = {r[1] for r in _run(conn, "PRAGMA table_info(users)").fetchall()}
+        if "balance" not in cols:
+            _run(conn, "ALTER TABLE users ADD COLUMN balance REAL NOT NULL DEFAULT 500000")
+        conn.commit()
+
+
+def get_balance(user_id) -> float:
+    with _conn() as conn:
+        row = _run(conn, "SELECT balance FROM users WHERE id = ?", (str(user_id),)).fetchone()
+    return float(row[0]) if row else 0.0
+
+
+def debit_balance(user_id, amount: float) -> bool:
+    """Atomic debit: the balance >= ? guard plus the rowcount check means two
+    simultaneous transfers cannot overdraw the account - one of them affects
+    0 rows and returns False."""
+    with _conn() as conn:
+        cur = _run(conn,
+            "UPDATE users SET balance = balance - ? WHERE id = ? AND balance >= ?",
+            (float(amount), str(user_id), float(amount)))
+        conn.commit()
+        return cur.rowcount > 0
+
+
+_migrate()
 
 
 def get_user_by_id(user_id: str) -> dict | None:

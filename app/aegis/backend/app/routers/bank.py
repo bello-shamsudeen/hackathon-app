@@ -9,8 +9,8 @@ import uuid
 from datetime import datetime
 
 from app.services.memory_store import (
-    get_user_by_msisdn, create_session, get_session, log_transaction, verify_pin,
-    clear_freshly_registered,
+    get_user_by_msisdn, get_user_by_id, create_session, get_session, log_transaction,
+    verify_pin, clear_freshly_registered, get_balance, debit_balance,
 )
 from app.models.schemas import (
     LoginRequest, LoginResponse, TransferRequest, TransferResponse,
@@ -52,7 +52,9 @@ def dashboard(session_id: str):
     session = get_session(session_id)
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
-    return {"balance": 458200.00, "currency": "NGN", "recent_transactions": []}
+    user = get_user_by_id(session["user_id"]) if session.get("user_id") else None
+    balance = get_balance(user["id"]) if user else 0.0
+    return {"balance": balance, "currency": "NGN", "recent_transactions": []}
 
 
 @router.post("/transfer", response_model=TransferResponse)
@@ -95,4 +97,18 @@ def transfer(req: TransferRequest):
     except Exception as exc:  # noqa: BLE001 - detection is best-effort here
         detection = {"error": str(exc)}
 
-    return TransferResponse(transaction_id=transaction_id, status="recorded", detection=detection)
+    # Division 2 - execution: the verdict now settles the transfer against a
+    # real balance. allow -> atomic debit (balance guard inside debit_balance)
+    #   -> "completed", or "insufficient_funds" if the balance cannot cover it;
+    # step_up -> held for OTP verification (Feature 2 hook); block -> the
+    # balance is never touched.
+    action = (detection or {}).get("action")
+    status = "recorded"
+    if action == "allow":
+        status = "completed" if debit_balance(user_id, req.amount) else "insufficient_funds"
+    elif action == "step_up":
+        status = "otp_required"
+    elif action == "block":
+        status = "blocked"
+
+    return TransferResponse(transaction_id=transaction_id, status=status, detection=detection)

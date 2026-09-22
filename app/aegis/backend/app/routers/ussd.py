@@ -5,6 +5,7 @@ import uuid
 
 from app.services.memory_store import (
     get_user_by_msisdn, create_session, get_session, log_transaction, log_ussd_event,
+    get_balance, debit_balance,
 )
 from app.models.schemas import USSDRequest
 from app.routers.score import score_session
@@ -48,7 +49,12 @@ def ussd_handler(req: USSDRequest):
             "4. Change PIN"
         )
     elif steps[0] == "1":
-        response_text = "END Your balance is NGN 458,200.00"
+        sess = get_session(real_session_id)
+        if sess and sess["user_id"]:
+            bal = get_balance(sess["user_id"])
+            response_text = f"END Your balance is NGN {bal:,.2f}"
+        else:
+            response_text = "END Your balance is unavailable. Please try again."
     elif steps[0] == "2":
         if len(steps) == 1:
             response_text = "CON Enter recipient number:"
@@ -71,7 +77,10 @@ def ussd_handler(req: USSDRequest):
                 elif action == "step_up":
                     response_text = "END Additional verification needed to complete this transfer. Please contact your bank or visit a branch."
                 else:
-                    response_text = f"END Transaction successful. NGN {amount} sent to {recipient}."
+                    if debit_balance(sess["user_id"], float(amount)):
+                        response_text = f"END Transaction successful. NGN {amount} sent to {recipient}."
+                    else:
+                        response_text = "END Insufficient funds. Your balance could not cover this transfer."
             else:
                 response_text = f"END Transaction successful. NGN {amount} sent to {recipient}."
         else:
