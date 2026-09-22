@@ -90,6 +90,7 @@ def score_session(session_id: str, *, current_imei: str = None,
             current_imei=current_imei, call_active=effective_call_active,
             otp_being_entered=bool(otp_being_entered),
             token_status=token_status, honeytoken_tripped=bool(honeytoken_tripped),
+            amount=tx_amount,
         )
     except Exception as exc:  # noqa: BLE001 - a hard-control bug must not 500 a transfer
         log.warning("hard controls errored (%s: %s) - proceeding on ML score only",

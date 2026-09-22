@@ -13,10 +13,28 @@ from app.services.sim_swap_module import (
 from app.services.identity_correlation import record_correlation_edge, check_device_fraud_ring
 
 
+AMOUNT_HARD_LIMIT = 200_000   # NGN -> BLOCK (matches rules_fallback.py's constant)
+AMOUNT_SOFT_LIMIT = 75_000    # NGN -> STEP-UP (matches rules_fallback.py's constant)
+
+
 def run_hard_controls(session_id: str, user_id: str, device_fingerprint: str,
                       ip_address: str, current_imei: str, call_active: bool,
                       otp_being_entered: bool, token_status: str = None,
-                      honeytoken_tripped: bool = False) -> dict:
+                      honeytoken_tripped: bool = False, amount: float = None) -> dict:
+    if amount is not None and amount >= AMOUNT_HARD_LIMIT:
+        return {
+            'override': True, 'source': 'AMOUNT_CEILING',
+            'tier': 'high', 'action': 'block',
+            'message': 'This transaction was blocked because the amount exceeds the maximum allowed for a single transfer.',
+            'amount': amount,
+        }
+    if amount is not None and amount >= AMOUNT_SOFT_LIMIT:
+        return {
+            'override': True, 'source': 'AMOUNT_CEILING',
+            'tier': 'medium', 'action': 'step_up',
+            'message': 'This transaction requires extra verification because the amount is unusually large.',
+            'amount': amount,
+        }
     if honeytoken_tripped:
         return {
             "override": True, "source": "HONEYTOKEN",
