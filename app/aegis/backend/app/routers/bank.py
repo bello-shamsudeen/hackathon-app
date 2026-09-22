@@ -186,7 +186,12 @@ def transfer_verify(req: OTPVerifyRequest):
     _PENDING_OTP.pop(req.transaction_id, None)
     status = "completed" if debit_balance(pending["user_id"], pending["amount"]) \
         else "insufficient_funds"
+    if status == "completed":
+        detection = {"action": "allow", "tier": "LOW",
+                     "message": f"NGN {pending['amount']:,.0f} sent to {pending['beneficiary']}."}
+    else:
+        detection = {"action": "review", "tier": "MEDIUM",
+                     "message": f"Insufficient funds to complete this transfer to {pending['beneficiary']}."}
     return TransferResponse(
         transaction_id=req.transaction_id, status=status,
-        detection={"action": "allow", "tier": "LOW",
-                   "message": f"NGN {pending['amount']:,.0f} sent to {pending['beneficiary']}."})
+        detection=detection)

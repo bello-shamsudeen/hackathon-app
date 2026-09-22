@@ -64,10 +64,11 @@ export default function SendMoney({ session }) {
     setLoading(false)
     if (data.status === 'completed') {
       setDecision({ tier: 'LOW', message: data.detection?.message || 'Transfer completed.', explanationSource: 'deterministic' })
+    } else if (data.status === 'insufficient_funds') {
+      setDecision({ tier: 'MEDIUM', message: data.detection?.message || 'Insufficient funds to complete this transfer.', explanationSource: 'deterministic' })
     } else {
       setDecision({ tier: 'HIGH', message: data.detection?.message || 'Verification failed.', explanationSource: 'deterministic' })
-    }
-    setOtpHold(null)
+    }    setOtpHold(null)
     setStep(4)
   }
 
