@@ -10,6 +10,6 @@
     { "source": "/score/:path*", "destination": "https://aegis-backend-l145.onrender.com/score/:path*" },
     { "source": "/ussd", "destination": "https://aegis-backend-l145.onrender.com/ussd" },
     { "source": "/ingest/:path*", "destination": "https://aegis-backend-l145.onrender.com/ingest/:path*" },
-    { "source": "/((?!bank|score|ussd|ingest).*)", "destination": "/index.html" }
+    { "source": "/:path*", "destination": "/index.html" }
   ]
 }
