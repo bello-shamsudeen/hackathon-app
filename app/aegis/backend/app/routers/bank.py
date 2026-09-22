@@ -21,6 +21,20 @@ from app.services.token_integrity import consume_token
 from app.services.honeytokens import check_honeytoken
 from app.routers.score import score_session
 
+# Feature 2 - OTP verification: pending step-up transfers held for a 6-digit
+#   code, in-memory with a 5-minute TTL, keyed by transaction_id.
+import secrets
+from pydantic import BaseModel
+
+_PENDING_OTP: dict[str, dict] = {}
+_OTP_TTL_SECONDS = 300
+
+
+class OTPVerifyRequest(BaseModel):
+    session_id: str
+    transaction_id: str
+    otp: str
+
 router = APIRouter(prefix="/bank", tags=["bank"])
 
 
@@ -122,6 +136,16 @@ def transfer(req: TransferRequest):
         status = "completed" if debit_balance(user_id, req.amount) else "insufficient_funds"
     elif action == "step_up":
         status = "otp_required"
+        # Feature 2 - issue the code and hold the transfer. Echoed in the
+        #   detection payload for demo visibility (no SMS in the sandbox).
+        _otp = f"{secrets.randbelow(1000000):06d}"
+        _PENDING_OTP[transaction_id] = {
+            "user_id": user_id, "beneficiary": req.beneficiary_account,
+            "amount": req.amount, "otp": _otp,
+            "expires": (datetime.utcnow() + timedelta(seconds=_OTP_TTL_SECONDS)).isoformat(),
+        }
+        (detection or {})["otp"] = _otp
+        (detection or {})["otp_ttl_seconds"] = _OTP_TTL_SECONDS
     elif action == "block":
         # Division 9 - severity-scaled block timer: 1h at the low end up to
         #   6h for the highest-confidence blocks; 1h fallback when the scorer
@@ -134,3 +158,35 @@ def transfer(req: TransferRequest):
         (detection or {})["blocked_until"] = _until
 
     return TransferResponse(transaction_id=transaction_id, status=status, detection=detection)
+
+
+@router.post("/transfer/verify", response_model=TransferResponse)
+def transfer_verify(req: OTPVerifyRequest):
+    """Feature 2 - complete a step-up transfer held for OTP verification."""
+    session = get_session(req.session_id)
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    pending = _PENDING_OTP.get(req.transaction_id)
+    if not pending or pending["user_id"] != session["user_id"]:
+        return TransferResponse(
+            transaction_id=req.transaction_id, status="otp_invalid",
+            detection={"action": "step_up", "reason": "NO_PENDING_TRANSFER",
+                       "message": "No transfer is awaiting verification."})
+    if datetime.utcnow() > datetime.fromisoformat(pending["expires"]):
+        _PENDING_OTP.pop(req.transaction_id, None)
+        return TransferResponse(
+            transaction_id=req.transaction_id, status="otp_expired",
+            detection={"action": "step_up", "reason": "OTP_EXPIRED",
+                       "message": "The code expired. Start the transfer again."})
+    if req.otp.strip() != pending["otp"]:
+        return TransferResponse(
+            transaction_id=req.transaction_id, status="otp_invalid",
+            detection={"action": "step_up", "reason": "OTP_MISMATCH",
+                       "message": "Incorrect code. Check the OTP and try again."})
+    _PENDING_OTP.pop(req.transaction_id, None)
+    status = "completed" if debit_balance(pending["user_id"], pending["amount"]) \
+        else "insufficient_funds"
+    return TransferResponse(
+        transaction_id=req.transaction_id, status=status,
+        detection={"action": "allow", "tier": "LOW",
+                   "message": f"NGN {pending['amount']:,.0f} sent to {pending['beneficiary']}."})

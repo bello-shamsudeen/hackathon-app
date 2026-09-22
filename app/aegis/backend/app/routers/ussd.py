@@ -18,6 +18,11 @@ _ussd_events: list[dict] = []
 
 _session_map: dict[str, str] = {}
 
+# Feature 2 - pending OTP step-ups for the USSD channel, keyed by user_id.
+import secrets
+_USSD_PENDING_OTP: dict[str, dict] = {}
+_USSD_OTP_TTL_SECONDS = 300
+
 
 def _fmt_remaining(iso_ts):
     """Human-readable remaining block time for USSD messages."""
@@ -100,7 +105,14 @@ def ussd_handler(req: USSDRequest):
                                      f"Your account is blocked for {_fmt_remaining(_until)}. "
                                      "Contact your bank if you believe this is an error.")
                 elif action == "step_up":
-                    response_text = "END Additional verification needed to complete this transfer. Please contact your bank or visit a branch."
+                    # Feature 2 - hold the transfer and issue a 6-digit OTP.
+                    #   Continues as: 2*recipient*amount*pin*otp
+                    _otp = f"{secrets.randbelow(1000000):06d}"
+                    _USSD_PENDING_OTP[sess["user_id"]] = {
+                        "recipient": recipient, "amount": float(amount), "otp": _otp,
+                        "expires": (datetime.utcnow() + timedelta(seconds=_USSD_OTP_TTL_SECONDS)).isoformat(),
+                    }
+                    response_text = f"CON Enter the 6-digit OTP sent to your phone (demo code: {_otp}):"
                 else:
                     if debit_balance(sess["user_id"], float(amount)):
                         response_text = f"END Transaction successful. NGN {amount} sent to {recipient}."
@@ -108,6 +120,24 @@ def ussd_handler(req: USSDRequest):
                         response_text = "END Insufficient funds. Your balance could not cover this transfer."
             else:
                 response_text = f"END Transaction successful. NGN {amount} sent to {recipient}."
+        elif len(steps) == 5:
+            # Feature 2 - OTP verification for a held step-up transfer.
+            otp_entered = steps[4]
+            sess = get_session(real_session_id)
+            _pending = _USSD_PENDING_OTP.get(sess["user_id"]) if sess and sess["user_id"] else None
+            if not _pending:
+                response_text = "END No transfer is awaiting verification. Start again from Send Money."
+            elif datetime.utcnow() > datetime.fromisoformat(_pending["expires"]):
+                _USSD_PENDING_OTP.pop(sess["user_id"], None)
+                response_text = "END The OTP expired. Start the transfer again."
+            elif otp_entered.strip() != _pending["otp"]:
+                response_text = "END Incorrect OTP. Check the code and try again."
+            else:
+                _USSD_PENDING_OTP.pop(sess["user_id"], None)
+                if debit_balance(sess["user_id"], _pending["amount"]):
+                    response_text = f"END Transaction successful. NGN {_pending['amount']:,.0f} sent to {_pending['recipient']}."
+                else:
+                    response_text = "END Insufficient funds. Your balance could not cover this transfer."
         else:
             response_text = "END Invalid input."
     elif steps[0] == "3":

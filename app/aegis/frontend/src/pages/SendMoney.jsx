@@ -14,6 +14,8 @@ export default function SendMoney({ session }) {
   const [amount, setAmount] = useState('')
   const [honeytoken, setHoneytoken] = useState('')
   const [decision, setDecision] = useState(null)
+  const [otpHold, setOtpHold] = useState(null) // { transactionId, demoOtp }
+  const [otp, setOtp] = useState('')
   const [loading, setLoading] = useState(false)
   const capture = useBehaviorCapture(session?.session_id)
   const navigate = useNavigate()
@@ -39,8 +41,33 @@ export default function SendMoney({ session }) {
         detail: transferData.blocked_until || transferData.detection?.blocked_until || null,
       }))
     }
+    if (transferData.status === 'otp_required') {
+      setOtpHold({ transactionId: transferData.transaction_id, demoOtp: transferData.detection?.otp })
+      setOtp('')
+      setLoading(false)
+      setStep(5)
+      return
+    }
     setDecision({ ...transferData.detection, explanation: transferData.detection?.message, explanationSource: 'deterministic' })
     setLoading(false)
+    setStep(4)
+  }
+
+  const handleVerify = async () => {
+    setLoading(true)
+    const res = await fetch('/bank/transfer/verify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ session_id: session.session_id, transaction_id: otpHold.transactionId, otp }),
+    })
+    const data = await res.json()
+    setLoading(false)
+    if (data.status === 'completed') {
+      setDecision({ tier: 'LOW', message: data.detection?.message || 'Transfer completed.', explanationSource: 'deterministic' })
+    } else {
+      setDecision({ tier: 'HIGH', message: data.detection?.message || 'Verification failed.', explanationSource: 'deterministic' })
+    }
+    setOtpHold(null)
     setStep(4)
   }
 
@@ -65,6 +92,9 @@ export default function SendMoney({ session }) {
             beneficiary={beneficiary} amount={amount} loading={loading}
             onConfirm={handleConfirm} honeytoken={honeytoken} setHoneytoken={setHoneytoken}
           />
+        )}
+        {step === 5 && otpHold && (
+          <StepOtp otp={otp} setOtp={setOtp} demoOtp={otpHold.demoOtp} loading={loading} onVerify={handleVerify} />
         )}
         {step === 4 && decision && (
           <StepResult decision={decision} onDone={() => navigate('/bank/home')} />
@@ -134,6 +164,30 @@ function StepReview({ beneficiary, amount, loading, onConfirm, honeytoken, setHo
 
       <button onClick={onConfirm} disabled={loading} style={primaryBtn}>
         {loading ? 'Processing\u2026' : 'Confirm & send'}
+      </button>
+    </div>
+  )
+}
+
+function StepOtp({ otp, setOtp, demoOtp, loading, onVerify }) {
+  return (
+    <div>
+      <h2 style={h2}>Enter OTP</h2>
+      <p style={{ color: 'var(--bank-ink-dim)', fontSize: 13, marginBottom: 14 }}>
+        We sent a 6-digit code to your phone to verify this transfer.
+      </p>
+      {demoOtp && (
+        <div style={{ background: '#FFF7E6', border: '1px solid var(--bank-orange)', borderRadius: 10, padding: '10px 14px', fontSize: 13, marginBottom: 16 }}>
+          Demo code: <strong>{demoOtp}</strong>
+        </div>
+      )}
+      <input
+        value={otp} onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+        placeholder="6-digit code" inputMode="numeric" autoFocus
+        style={{ ...inputStyle, textAlign: 'center', fontSize: 22, letterSpacing: 6 }}
+      />
+      <button onClick={onVerify} disabled={loading || otp.length !== 6} style={{ ...primaryBtn, marginTop: 20, opacity: otp.length === 6 && !loading ? 1 : 0.4 }}>
+        {loading ? 'Processing\u2026' : 'Verify & send'}
       </button>
     </div>
   )
