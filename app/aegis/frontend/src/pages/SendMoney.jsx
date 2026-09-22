@@ -34,6 +34,11 @@ export default function SendMoney({ session }) {
     })
     const transferData = await transferRes.json()
 
+    if (transferData.status === 'blocked' && transferData.detection?.action === 'block') {
+      window.dispatchEvent(new CustomEvent('aegis:blocked', {
+        detail: transferData.blocked_until || transferData.detection?.blocked_until || null,
+      }))
+    }
     setDecision({ ...transferData.detection, explanation: transferData.detection?.message, explanationSource: 'deterministic' })
     setLoading(false)
     setStep(4)

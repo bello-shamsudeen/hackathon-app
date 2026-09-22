@@ -36,6 +36,11 @@ export default function ManualEngine({ session }) {
       })
       if (!res.ok) throw new Error('HTTP ' + res.status)
       const data = await res.json()
+      if (data.detection?.action === 'block') {
+        window.dispatchEvent(new CustomEvent('aegis:blocked', {
+          detail: data.blocked_until || data.detection?.blocked_until || null,
+        }))
+      }
       setResult(data.detection || { error: 'Transfer recorded, but no detection result was returned.' })
     } catch (e) {
       setError(String(e.message || e))

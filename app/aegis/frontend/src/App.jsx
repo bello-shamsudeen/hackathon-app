@@ -26,7 +26,7 @@ export default function App() {
         <Route path="/" element={<Landing onLogin={handleLogin} />} />
         <Route path="/register" element={<Register onRegistered={handleLogin} />} />
         <Route path="/bank" element={<Login onLogin={handleLogin} />} />
-        <Route element={<DemoHub />}>
+        <Route element={<DemoHub session={session} />}>
           <Route path="/bank/home" element={
             <Home session={session} showColdStartHint={showColdStartHint} dismissColdStartHint={() => setShowColdStartHint(false)} />
           } />

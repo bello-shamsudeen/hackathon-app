@@ -19,6 +19,15 @@ _ussd_events: list[dict] = []
 _session_map: dict[str, str] = {}
 
 
+def _fmt_remaining(iso_ts):
+    """Human-readable remaining block time for USSD messages."""
+    try:
+        secs = max(0, int((datetime.fromisoformat(iso_ts) - datetime.utcnow()).total_seconds()))
+        return f"{secs // 3600}h {(secs % 3600) // 60}m"
+    except Exception:
+        return "a short while"
+
+
 def _session_uuid(aggregator_session_id: str) -> str:
     return str(uuid.uuid5(USSD_SESSION_NAMESPACE, aggregator_session_id))
 
@@ -69,10 +78,11 @@ def ussd_handler(req: USSDRequest):
             if sess and sess["user_id"]:
                 blocked, _blocked_until = is_blocked(sess["user_id"])
             else:
-                blocked = False
+                blocked, _blocked_until = False, None
             if blocked:
                 # Division 9 - dynamic block timer enforced before scoring.
-                response_text = "END Your account is temporarily blocked for your security. Please try again later."
+                response_text = ("END Your account is temporarily blocked for your security. "
+                                 f"Time remaining: {_fmt_remaining(_blocked_until)}.")
             elif sess and sess["user_id"]:
                 log_transaction(real_session_id, sess["user_id"], recipient, float(amount))
                 try:
@@ -84,8 +94,11 @@ def ussd_handler(req: USSDRequest):
                     # Division 9 - severity-scaled block timer (1h-6h).
                     _sev = float((detection if isinstance(detection, dict) else {}).get("risk_score") or 0)
                     _hours = 1 + int(5 * min(1.0, max(0.0, _sev)))
-                    set_blocked(sess["user_id"], (datetime.utcnow() + timedelta(hours=_hours)).isoformat())
-                    response_text = "END Transaction declined for your security. Contact your bank if you believe this is an error."
+                    _until = (datetime.utcnow() + timedelta(hours=_hours)).isoformat()
+                    set_blocked(sess["user_id"], _until)
+                    response_text = ("END Transaction declined for your security. "
+                                     f"Your account is blocked for {_fmt_remaining(_until)}. "
+                                     "Contact your bank if you believe this is an error.")
                 elif action == "step_up":
                     response_text = "END Additional verification needed to complete this transfer. Please contact your bank or visit a branch."
                 else:

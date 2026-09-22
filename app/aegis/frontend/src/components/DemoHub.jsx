@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import BlockBanner from './BlockBanner'
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
 
 const DEMOS = [
@@ -13,7 +14,7 @@ const DOT = {
   unknown: { color: '#7A8A90', label: '...', pulse: false },
 }
 
-export default function DemoHub() {
+export default function DemoHub({ session }) {
   const navigate = useNavigate()
   const location = useLocation()
   const [open, setOpen] = useState(false)
@@ -99,6 +100,8 @@ export default function DemoHub() {
       </aside>
 
       {open && <div className="demo-hub-overlay" onClick={() => setOpen(false)} />}
+
+      <BlockBanner session={session} />
 
       <main className="demo-hub-content"><Outlet /></main>
     </div>

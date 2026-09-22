@@ -55,7 +55,9 @@ def dashboard(session_id: str):
         raise HTTPException(status_code=404, detail="Session not found")
     user = get_user_by_id(session["user_id"]) if session.get("user_id") else None
     balance = get_balance(user["id"]) if user else 0.0
-    return {"balance": balance, "currency": "NGN", "recent_transactions": []}
+    blocked, blocked_until = is_blocked(user["id"]) if user else (False, None)
+    return {"balance": balance, "currency": "NGN", "recent_transactions": [],
+            "blocked": blocked, "blocked_until": blocked_until}
 
 
 @router.post("/transfer", response_model=TransferResponse)
@@ -126,7 +128,9 @@ def transfer(req: TransferRequest):
         #   reports no risk_score.
         _sev = float((detection or {}).get("risk_score") or 0)
         _hours = 1 + int(5 * min(1.0, max(0.0, _sev)))
-        set_blocked(user_id, (datetime.utcnow() + timedelta(hours=_hours)).isoformat())
+        _until = (datetime.utcnow() + timedelta(hours=_hours)).isoformat()
+        set_blocked(user_id, _until)
         status = "blocked"
+        (detection or {})["blocked_until"] = _until
 
     return TransferResponse(transaction_id=transaction_id, status=status, detection=detection)
