@@ -6,11 +6,12 @@ into the request model but never read or checked anywhere.
 """
 from fastapi import APIRouter, HTTPException
 import uuid
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from app.services.memory_store import (
     get_user_by_msisdn, get_user_by_id, create_session, get_session, log_transaction,
     verify_pin, clear_freshly_registered, get_balance, debit_balance,
+    is_blocked, set_blocked,
 )
 from app.models.schemas import (
     LoginRequest, LoginResponse, TransferRequest, TransferResponse,
@@ -71,6 +72,17 @@ def transfer(req: TransferRequest):
 
     transaction_id = log_transaction(req.session_id, user_id, req.beneficiary_account, req.amount)
 
+    # Division 9 - dynamic block timer: a blocked account is refused BEFORE
+    #   velocity, token consumption, and scoring. blocked_until is server-side
+    #   state - no endpoint can clear it; it expires on its own clock.
+    _blocked, _blocked_until = is_blocked(user_id)
+    if _blocked:
+        return TransferResponse(
+            transaction_id=transaction_id, status="blocked",
+            detection={"action": "block", "reason": "ACCOUNT_BLOCKED",
+                       "blocked_until": _blocked_until},
+        )
+
     # Division 4B - count this transfer in the rolling velocity window before scoring.
     velocity.record_transfer(user_id)
 
@@ -109,6 +121,12 @@ def transfer(req: TransferRequest):
     elif action == "step_up":
         status = "otp_required"
     elif action == "block":
+        # Division 9 - severity-scaled block timer: 1h at the low end up to
+        #   6h for the highest-confidence blocks; 1h fallback when the scorer
+        #   reports no risk_score.
+        _sev = float((detection or {}).get("risk_score") or 0)
+        _hours = 1 + int(5 * min(1.0, max(0.0, _sev)))
+        set_blocked(user_id, (datetime.utcnow() + timedelta(hours=_hours)).isoformat())
         status = "blocked"
 
     return TransferResponse(transaction_id=transaction_id, status=status, detection=detection)

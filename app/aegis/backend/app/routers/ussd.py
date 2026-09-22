@@ -1,11 +1,12 @@
 """Division 2B - USSD gateway. Uses memory_store."""
-from datetime import datetime
+from datetime import datetime, timedelta
 from fastapi import APIRouter, Response
 import uuid
 
 from app.services.memory_store import (
     get_user_by_msisdn, create_session, get_session, log_transaction, log_ussd_event,
     get_balance, debit_balance,
+    is_blocked, set_blocked,
 )
 from app.models.schemas import USSDRequest
 from app.routers.score import score_session
@@ -66,6 +67,13 @@ def ussd_handler(req: USSDRequest):
             recipient, amount, pin = steps[1], steps[2], steps[3]
             sess = get_session(real_session_id)
             if sess and sess["user_id"]:
+                blocked, _blocked_until = is_blocked(sess["user_id"])
+            else:
+                blocked = False
+            if blocked:
+                # Division 9 - dynamic block timer enforced before scoring.
+                response_text = "END Your account is temporarily blocked for your security. Please try again later."
+            elif sess and sess["user_id"]:
                 log_transaction(real_session_id, sess["user_id"], recipient, float(amount))
                 try:
                     detection = score_session(real_session_id)
@@ -73,6 +81,10 @@ def ussd_handler(req: USSDRequest):
                 except Exception as exc:
                     action = "allow"
                 if action == "block":
+                    # Division 9 - severity-scaled block timer (1h-6h).
+                    _sev = float((detection if isinstance(detection, dict) else {}).get("risk_score") or 0)
+                    _hours = 1 + int(5 * min(1.0, max(0.0, _sev)))
+                    set_blocked(sess["user_id"], (datetime.utcnow() + timedelta(hours=_hours)).isoformat())
                     response_text = "END Transaction declined for your security. Contact your bank if you believe this is an error."
                 elif action == "step_up":
                     response_text = "END Additional verification needed to complete this transfer. Please contact your bank or visit a branch."

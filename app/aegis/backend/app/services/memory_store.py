@@ -156,6 +156,7 @@ _DDL = """
         avatar_data_url TEXT,
         is_freshly_registered INTEGER DEFAULT 0,
         balance REAL NOT NULL DEFAULT 500000,
+        blocked_until TEXT,
         account_created_at TEXT NOT NULL
     );
     CREATE TABLE IF NOT EXISTS telco_state (
@@ -296,6 +297,37 @@ def _migrate() -> None:
             cols = {r[1] for r in _run(conn, "PRAGMA table_info(users)").fetchall()}
         if "balance" not in cols:
             _run(conn, "ALTER TABLE users ADD COLUMN balance REAL NOT NULL DEFAULT 500000")
+        if "blocked_until" not in cols:
+            _run(conn, "ALTER TABLE users ADD COLUMN blocked_until TEXT")
+        conn.commit()
+
+
+import datetime as _dt
+
+
+def get_blocked_until(user_id) -> str | None:
+    with _conn() as conn:
+        row = _run(conn, "SELECT blocked_until FROM users WHERE id = ?", (str(user_id),)).fetchone()
+    return row[0] if row and row[0] else None
+
+
+def is_blocked(user_id) -> tuple:
+    """(blocked, blocked_until_iso). The check runs off the server's clock -
+    no endpoint ever writes NULL to blocked_until, so the only way out of a
+    block is the timer expiring on its own."""
+    until = get_blocked_until(user_id)
+    if not until:
+        return False, None
+    try:
+        expired = _dt.datetime.utcnow() >= _dt.datetime.fromisoformat(str(until))
+    except (TypeError, ValueError):
+        return False, None
+    return (not expired), until
+
+
+def set_blocked(user_id, blocked_until: str) -> None:
+    with _conn() as conn:
+        _run(conn, "UPDATE users SET blocked_until = ? WHERE id = ?", (blocked_until, str(user_id)))
         conn.commit()
 
 
