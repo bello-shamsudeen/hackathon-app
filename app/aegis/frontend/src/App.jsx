@@ -11,13 +11,31 @@ import UssdSimulator from './pages/UssdSimulator'
 import ManualEngine from './pages/ManualEngine'
 import DemoHub from './components/DemoHub'
 
+// Session persistence: survives refresh (sessionStorage), cleared on logout.
+const SESSION_KEY = 'aegis.session'
+
+function loadStoredSession() {
+  try {
+    const raw = sessionStorage.getItem(SESSION_KEY)
+    return raw ? JSON.parse(raw) : null
+  } catch {
+    return null
+  }
+}
+
 export default function App() {
-  const [session, setSession] = useState(null)
+  const [session, setSession] = useState(loadStoredSession)
   const [showColdStartHint, setShowColdStartHint] = useState(false)
 
   const handleLogin = (data) => {
     setSession(data)
+    sessionStorage.setItem(SESSION_KEY, JSON.stringify(data))
     if (data.is_freshly_registered) setShowColdStartHint(true)
+  }
+
+  const handleLogout = () => {
+    setSession(null)
+    sessionStorage.removeItem(SESSION_KEY)
   }
 
   return (
@@ -26,7 +44,7 @@ export default function App() {
         <Route path="/" element={<Landing onLogin={handleLogin} />} />
         <Route path="/register" element={<Register onRegistered={handleLogin} />} />
         <Route path="/bank" element={<Login onLogin={handleLogin} />} />
-        <Route element={<DemoHub session={session} />}>
+        <Route element={<DemoHub session={session} onLogout={handleLogout} />}>
           <Route path="/bank/home" element={
             <Home session={session} showColdStartHint={showColdStartHint} dismissColdStartHint={() => setShowColdStartHint(false)} />
           } />
