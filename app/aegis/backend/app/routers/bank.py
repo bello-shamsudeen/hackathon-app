@@ -11,7 +11,7 @@ from datetime import datetime, timedelta
 from app.services.memory_store import (
     get_user_by_msisdn, get_user_by_id, create_session, get_session, log_transaction,
     verify_pin, clear_freshly_registered, get_balance, debit_balance,
-    is_blocked, set_blocked,
+    is_blocked, set_blocked, log_decision, clear_user_history,
 )
 from app.models.schemas import (
     LoginRequest, LoginResponse, TransferRequest, TransferResponse,
@@ -56,7 +56,7 @@ def login(req: LoginRequest):
     session_id = create_session(str(user["id"]), "WEB", req.device_fingerprint)
 
     return LoginResponse(
-        session_id=session_id, user_id=str(user["id"]), full_name=user["full_name"],
+        session_id=session_id, user_id=str(user["id"]), msisdn=user["msisdn"], full_name=user["full_name"],
         account_number=user.get("account_number"), avatar_data_url=user.get("avatar_data_url"),
         is_freshly_registered=was_freshly_registered,
     )
@@ -93,6 +93,13 @@ def transfer(req: TransferRequest):
     #   state - no endpoint can clear it; it expires on its own clock.
     _blocked, _blocked_until = is_blocked(user_id)
     if _blocked:
+        log_decision(
+            req.session_id, transaction_id, 1.0, "BLOCK",
+            ["ACCOUNT_BLOCKED"], {"account_block": 1.0},
+            "Transfer declined: your account is temporarily blocked.",
+            "Pre-check block: account blocked until %s; transfer refused before scoring." % _blocked_until,
+            "deterministic-precheck", 0.0,
+        )
         return TransferResponse(
             transaction_id=transaction_id, status="blocked",
             detection={"action": "block", "reason": "ACCOUNT_BLOCKED",
@@ -166,6 +173,20 @@ def transfer_verify(req: OTPVerifyRequest):
     session = get_session(req.session_id)
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
+    _blocked, _blocked_until = is_blocked(session["user_id"])
+    if _blocked:
+        log_decision(
+            req.session_id, req.transaction_id, 1.0, "BLOCK",
+            ["ACCOUNT_BLOCKED"], {"account_block": 1.0},
+            "Transfer declined: your account is temporarily blocked.",
+            "Pre-check block at OTP verification: account blocked until %s; held transfer refused." % _blocked_until,
+            "deterministic-precheck", 0.0,
+        )
+        return TransferResponse(
+            transaction_id=req.transaction_id, status="blocked",
+            detection={"action": "block", "reason": "ACCOUNT_BLOCKED",
+                       "blocked_until": _blocked_until,
+                       "message": "Account blocked. This transfer cannot complete until the block lifts."})
     pending = _PENDING_OTP.get(req.transaction_id)
     if not pending or pending["user_id"] != session["user_id"]:
         return TransferResponse(
@@ -195,3 +216,22 @@ def transfer_verify(req: OTPVerifyRequest):
     return TransferResponse(
         transaction_id=req.transaction_id, status=status,
         detection=detection)
+
+@router.post("/history/reset/{user_id}")
+def reset_transaction_history(user_id: str):
+    """Wipe the user's transaction + decision history (audit_log untouched).
+
+    Refuses while a step-up transfer is held for OTP so that pending flow is
+    never orphaned; expired holds are ignored (they fail closed at verify).
+    """
+    if not get_user_by_id(user_id):
+        raise HTTPException(status_code=404, detail="User not found")
+    now = datetime.utcnow()
+    for hold in list(_PENDING_OTP.values()):
+        if hold["user_id"] == user_id and now <= datetime.fromisoformat(hold["expires"]):
+            raise HTTPException(
+                status_code=409,
+                detail="A transfer is waiting for OTP verification. Complete it or wait for the code to expire before clearing history.",
+            )
+    deleted = clear_user_history(user_id)
+    return {"ok": True, "deleted": deleted}

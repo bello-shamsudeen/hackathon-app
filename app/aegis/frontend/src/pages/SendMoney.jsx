@@ -48,7 +48,24 @@ export default function SendMoney({ session }) {
       setStep(5)
       return
     }
-    setDecision({ ...transferData.detection, explanation: transferData.detection?.message, explanationSource: 'deterministic' })
+    if (transferData.status === 'blocked') {
+      setDecision({
+        kind: 'blocked', tier: 'HIGH',
+        message: transferData.detection?.message || 'This transfer was declined because your account is temporarily blocked.',
+        blockedUntil: transferData.detection?.blocked_until || null,
+        explanationSource: 'deterministic',
+      })
+    } else if (transferData.status === 'insufficient_funds') {
+      setDecision({
+        kind: 'error', tier: 'MEDIUM',
+        message: 'Insufficient funds. Your balance could not cover this transfer.',
+        explanationSource: 'deterministic',
+      })
+    } else if (transferData.status === 'completed') {
+      setDecision({ kind: 'success', ...transferData.detection, explanation: transferData.detection?.message, explanationSource: 'deterministic' })
+    } else {
+      setDecision({ kind: 'error', tier: 'MEDIUM', message: transferData.detection?.message || 'This transfer could not be completed.', explanationSource: 'deterministic' })
+    }
     setLoading(false)
     setStep(4)
   }
@@ -63,11 +80,13 @@ export default function SendMoney({ session }) {
     const data = await res.json()
     setLoading(false)
     if (data.status === 'completed') {
-      setDecision({ tier: 'LOW', message: data.detection?.message || 'Transfer completed.', explanationSource: 'deterministic' })
+      setDecision({ kind: 'success', tier: 'LOW', message: data.detection?.message || 'Transfer completed.', explanationSource: 'deterministic' })
     } else if (data.status === 'insufficient_funds') {
-      setDecision({ tier: 'MEDIUM', message: data.detection?.message || 'Insufficient funds to complete this transfer.', explanationSource: 'deterministic' })
+      setDecision({ kind: 'error', tier: 'MEDIUM', message: data.detection?.message || 'Insufficient funds to complete this transfer.', explanationSource: 'deterministic' })
+    } else if (data.status === 'blocked') {
+      setDecision({ kind: 'blocked', tier: 'HIGH', message: data.detection?.message || 'Account blocked. This transfer cannot complete until the block lifts.', blockedUntil: data.detection?.blocked_until || null, explanationSource: 'deterministic' })
     } else {
-      setDecision({ tier: 'HIGH', message: data.detection?.message || 'Verification failed.', explanationSource: 'deterministic' })
+      setDecision({ kind: 'error', tier: 'HIGH', message: data.detection?.message || 'Verification failed.', explanationSource: 'deterministic' })
     }    setOtpHold(null)
     setStep(4)
   }
@@ -156,7 +175,7 @@ function StepReview({ beneficiary, amount, loading, onConfirm, honeytoken, setHo
         <Row label="Amount" value={`\u20a6${parseFloat(amount || 0).toLocaleString()}`} />
       </div>
 
-      {/* Division 8B honeytoken â€” invisible to real users */}
+      {/* Division 8B honeytoken - hidden field; only a bot that auto-fills every field populates it */}
       <input
         type="text" name="confirm_email_address" value={honeytoken}
         onChange={(e) => setHoneytoken(e.target.value)} tabIndex={-1} autoComplete="off"
@@ -195,11 +214,13 @@ function StepOtp({ otp, setOtp, demoOtp, loading, onVerify }) {
 }
 
 function StepResult({ decision, onDone }) {
+  const kind = decision.kind || (decision.tier?.toUpperCase() === 'HIGH' ? 'blocked' : decision.tier?.toUpperCase() === 'MEDIUM' ? 'challenge' : 'success')
   const config = {
-    ALLOW: { icon: '\u2713', color: 'var(--verdict-low)', title: 'Sent' },
-    CHALLENGE: { icon: '!', color: 'var(--verdict-medium)', title: 'We need to verify it\u2019s you' },
-    BLOCK: { icon: '\u2715', color: 'var(--verdict-high)', title: 'We stopped this transfer' },
-  }[decision.tier?.toUpperCase() === 'HIGH' ? 'BLOCK' : decision.tier?.toUpperCase() === 'MEDIUM' ? 'CHALLENGE' : 'ALLOW']
+    success:   { icon: '✓', color: 'var(--verdict-low)',    title: 'Sent' },
+    challenge: { icon: '!', color: 'var(--verdict-medium)', title: 'We need to verify it’s you' },
+    blocked:   { icon: '✕', color: 'var(--verdict-high)',  title: 'We stopped this transfer' },
+    error:     { icon: '!', color: 'var(--verdict-medium)', title: 'Transfer could not be completed' },
+  }[kind]
 
   const sourceLabel = {
     gemini: 'Gemini rewrite',
@@ -219,9 +240,14 @@ function StepResult({ decision, onDone }) {
         {config.icon}
       </div>
       <h2 style={h2}>{config.title}</h2>
-      <p style={{ color: 'var(--bank-ink-dim)', fontSize: 14, maxWidth: 280, margin: '12px auto 30px' }}>
+      <p style={{ color: 'var(--bank-ink-dim)', fontSize: 14, maxWidth: 280, margin: '12px auto 8px' }}>
         {decision.explanation || decision.message}
       </p>
+      {kind === 'blocked' && decision.blockedUntil ? (
+        <p style={{ color: 'var(--verdict-high)', fontSize: 13, fontWeight: 600, margin: '0 auto 30px' }}>
+          Blocked until {new Date(decision.blockedUntil).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+        </p>
+      ) : null}
       <div style={{ fontSize: 11, color: 'var(--bank-ink-dim)', marginBottom: 16 }}>
         {sourceLabel}
       </div>

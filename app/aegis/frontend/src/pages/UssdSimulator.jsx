@@ -8,7 +8,14 @@ import { useState } from 'react'
  */
 export default function UssdSimulator() {
   const [sessionId] = useState(() => crypto.randomUUID())
-  const [phoneNumber] = useState('08012345678') // demo number; should match a seeded synthetic user
+  const [phoneNumber] = useState(() => {
+    try {
+      const s = JSON.parse(sessionStorage.getItem("aegis.session") || "null")
+      return (s && s.msisdn) || '08012345678' // logged-in user's line, else demo number
+    } catch {
+      return '08012345678'
+    }
+  })
   const [textSteps, setTextSteps] = useState([]) // accumulated key presses this session
   const [screen, setScreen] = useState('Dial *737# to begin')
   const [input, setInput] = useState('')

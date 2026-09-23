@@ -6,7 +6,7 @@ import uuid
 from app.services.memory_store import (
     get_user_by_msisdn, create_session, get_session, log_transaction, log_ussd_event,
     get_balance, debit_balance,
-    is_blocked, set_blocked,
+    is_blocked, set_blocked, verify_pin, get_user_by_id,
 )
 from app.models.schemas import USSDRequest
 from app.routers.score import score_session
@@ -88,6 +88,8 @@ def ussd_handler(req: USSDRequest):
                 # Division 9 - dynamic block timer enforced before scoring.
                 response_text = ("END Your account is temporarily blocked for your security. "
                                  f"Time remaining: {_fmt_remaining(_blocked_until)}.")
+            elif sess and sess["user_id"] and not verify_pin(get_user_by_id(sess["user_id"]), pin):
+                response_text = "END Incorrect PIN."
             elif sess and sess["user_id"]:
                 log_transaction(real_session_id, sess["user_id"], recipient, float(amount))
                 try:
@@ -119,7 +121,7 @@ def ussd_handler(req: USSDRequest):
                     else:
                         response_text = "END Insufficient funds. Your balance could not cover this transfer."
             else:
-                response_text = f"END Transaction successful. NGN {amount} sent to {recipient}."
+                response_text = "END Session expired. Please start again."
         elif len(steps) == 5:
             # Feature 2 - OTP verification for a held step-up transfer.
             otp_entered = steps[4]

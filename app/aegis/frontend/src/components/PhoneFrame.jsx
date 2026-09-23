@@ -22,12 +22,14 @@ export default function PhoneFrame({ children, showNav = true }) {
     <div className="phone-frame-wrapper">
       <style>{`
         .phone-frame-wrapper {
+          width: 100%;
           min-height: 100vh;
           background: var(--bank-navy-900);
           display: flex;
           align-items: center;
           justify-content: center;
           padding: 24px;
+          box-sizing: border-box;
         }
         .phone-frame {
           width: 390px;

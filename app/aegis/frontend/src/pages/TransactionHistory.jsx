@@ -9,7 +9,21 @@ export default function TransactionHistory({ session }) {
   const [transactions, setTransactions] = useState([])
   const [filter, setFilter] = useState('All')
   const [selected, setSelected] = useState(null)
+  const [clearing, setClearing] = useState(false)
   const navigate = useNavigate()
+
+  const clearHistory = async () => {
+    if (!window.confirm('Clear all transfer history? This cannot be undone.')) return
+    setClearing(true)
+    try {
+      const r = await fetch(`/bank/history/reset/${session.user_id}`, { method: 'POST' })
+      const d = await r.json()
+      if (r.ok && d.ok) setTransactions([])
+      else window.alert(d.detail || 'Could not clear history right now.')
+    } finally {
+      setClearing(false)
+    }
+  }
 
   useEffect(() => {
     if (!session) { navigate('/bank'); return }
@@ -47,6 +61,19 @@ export default function TransactionHistory({ session }) {
             </button>
           ))}
         </div>
+
+        <button
+          onClick={clearHistory}
+          disabled={clearing || transactions.length === 0}
+          style={{
+            marginBottom: 18, padding: '7px 14px', borderRadius: 8, fontSize: 12, fontWeight: 600,
+            cursor: clearing || transactions.length === 0 ? 'default' : 'pointer',
+            border: '1px solid var(--bank-border)', background: '#fff', color: 'var(--bank-ink-dim)',
+            opacity: clearing || transactions.length === 0 ? 0.5 : 1
+          }}
+        >
+          {clearing ? 'Clearing...' : 'Clear history'}
+        </button>
 
         {Object.entries(grouped).map(([date, txs]) => (
           <div key={date} style={{ marginBottom: 20 }}>

@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 
 // Division 9D - block countdown banner. Mounted once inside DemoHub, so it
 // covers BANK (web), USSD simulator and FALLBACK ENGINE in one place. Any
@@ -55,14 +55,14 @@ export default function BlockBanner({ session }) {
     <div className="block-banner" role="alert">
       <style>{`
         .block-banner {
-          position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+          position: relative; z-index: 5;
           display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
           background: linear-gradient(90deg, #6E1B23 0%, #D64550 100%);
           color: #fff; padding: 12px 16px 12px 72px;
           box-shadow: 0 2px 14px rgba(0,0,0,0.4);
           animation: block-banner-in 0.35s ease;
         }
-        @keyframes block-banner-in { from { transform: translateY(-100%); } to { transform: translateY(0); } }
+        @keyframes block-banner-in { from { opacity: 0; } to { opacity: 1; } }
         .block-banner-icon { font-size: 20px; animation: block-banner-blink 1.6s ease-in-out infinite; }
         @keyframes block-banner-blink { 0%,100% { opacity: 1; } 50% { opacity: 0.35; } }
         .block-banner-text { display: flex; flex-direction: column; line-height: 1.3; min-width: 0; }

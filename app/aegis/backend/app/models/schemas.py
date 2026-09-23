@@ -37,6 +37,8 @@ class LoginRequest(BaseModel):
 
 
 class LoginResponse(BaseModel):
+
+    msisdn: str | None = None
     session_id: str
     user_id: str
     full_name: str

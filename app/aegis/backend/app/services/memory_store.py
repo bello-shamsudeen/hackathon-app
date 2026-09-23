@@ -468,6 +468,14 @@ def get_transactions_for_user(user_id: str) -> list[dict]:
     return sorted(out, key=lambda t: t["requested_at"], reverse=True)
 
 
+def clear_user_history(user_id: str) -> int:
+    with _conn() as conn:
+        _run(conn, "DELETE FROM decisions WHERE transaction_id IN (SELECT id FROM transactions WHERE user_id = ?)", (user_id,))
+        cur = _run(conn, "DELETE FROM transactions WHERE user_id = ?", (user_id,))
+        conn.commit()
+        return cur.rowcount
+
+
 def get_transaction_for_session(session_id: str) -> dict | None:
     with _conn() as conn:
         rows = _run(conn, "SELECT * FROM transactions WHERE session_id = ?", (session_id,)).fetchall()
