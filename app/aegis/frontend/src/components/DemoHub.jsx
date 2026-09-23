@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+﻿import { useState, useEffect } from 'react'
 import BlockBanner from './BlockBanner'
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
 
@@ -14,7 +14,7 @@ const DOT = {
   unknown: { color: '#7A8A90', label: '...', pulse: false },
 }
 
-export default function DemoHub({ session }) {
+export default function DemoHub({ session, onLogout }) {
   const navigate = useNavigate()
   const location = useLocation()
   const [open, setOpen] = useState(false)
@@ -44,7 +44,15 @@ export default function DemoHub({ session }) {
   }
 
   const go = (path) => { navigate(path); setOpen(false) }
+
+  const handleLogout = () => {
+    setOpen(false)
+    if (onLogout) onLogout()
+    navigate('/')
+  }
+
   const dot = DOT[engine] || DOT.unknown
+  const isRegistered = session && session.account_number
 
   return (
     <div className="demo-hub">
@@ -77,6 +85,11 @@ export default function DemoHub({ session }) {
           color: #fff; border-left-color: var(--ops-accent, #4FD1C5);
           background: rgba(79,209,197,0.10);
         }
+        .demo-hub-logout {
+          margin-top: auto; border-top: 1px solid rgba(255,255,255,0.12);
+          border-left: 3px solid transparent; color: #D64550;
+        }
+        .demo-hub-logout:hover { color: #ff6b74; background: rgba(214,69,80,0.12); }
         .demo-hub-dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
         .demo-hub-dot-pulse { animation: demo-hub-pulse 1.4s ease-in-out infinite; }
         @keyframes demo-hub-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
@@ -97,6 +110,11 @@ export default function DemoHub({ session }) {
             )}
           </button>
         ))}
+        {isRegistered && (
+          <button className="demo-hub-item demo-hub-logout" onClick={handleLogout}>
+            <span>LOGOUT</span>
+          </button>
+        )}
       </aside>
 
       {open && <div className="demo-hub-overlay" onClick={() => setOpen(false)} />}
