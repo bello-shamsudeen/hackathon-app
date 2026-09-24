@@ -1,4 +1,4 @@
-﻿{
+{
   "rewrites": [
     { "source": "/bank/login", "destination": "https://aegis-backend-l145.onrender.com/bank/login" },
     { "source": "/bank/register", "destination": "https://aegis-backend-l145.onrender.com/bank/register" },
