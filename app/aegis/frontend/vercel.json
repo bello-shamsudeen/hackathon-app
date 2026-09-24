@@ -1,9 +1,16 @@
-{
+﻿{
   "rewrites": [
-    { "source": "/bank/:path*", "destination": "https://aegis-backend-l145.onrender.com/bank/:path*" },
+    { "source": "/bank/login", "destination": "https://aegis-backend-l145.onrender.com/bank/login" },
+    { "source": "/bank/register", "destination": "https://aegis-backend-l145.onrender.com/bank/register" },
+    { "source": "/bank/transfer", "destination": "https://aegis-backend-l145.onrender.com/bank/transfer" },
+    { "source": "/bank/transfer/verify", "destination": "https://aegis-backend-l145.onrender.com/bank/transfer/verify" },
+    { "source": "/bank/dashboard/:path*", "destination": "https://aegis-backend-l145.onrender.com/bank/dashboard/:path*" },
+    { "source": "/bank/profile/:id", "destination": "https://aegis-backend-l145.onrender.com/bank/profile/:id" },
+    { "source": "/bank/transactions/:path*", "destination": "https://aegis-backend-l145.onrender.com/bank/transactions/:path*" },
     { "source": "/score/:path*", "destination": "https://aegis-backend-l145.onrender.com/score/:path*" },
     { "source": "/ussd", "destination": "https://aegis-backend-l145.onrender.com/ussd" },
     { "source": "/ingest/:path*", "destination": "https://aegis-backend-l145.onrender.com/ingest/:path*" },
+    { "source": "/bank/history/:path*", "destination": "https://aegis-backend-l145.onrender.com/bank/history/:path*" },
     { "source": "/:path*", "destination": "/index.html" }
   ]
 }
