@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+﻿import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import PhoneFrame from '../components/PhoneFrame'
 
@@ -20,6 +20,8 @@ export default function TransactionHistory({ session }) {
       const d = await r.json()
       if (r.ok && d.ok) setTransactions([])
       else window.alert(d.detail || 'Could not clear history right now.')
+    } catch {
+      window.alert('Could not clear history right now.')
     } finally {
       setClearing(false)
     }
