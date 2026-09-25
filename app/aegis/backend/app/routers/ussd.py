@@ -54,6 +54,7 @@ def ussd_handler(req: USSDRequest):
     })
 
     steps = req.text.split("*") if req.text else []
+    steps = [s.strip().rstrip("#").strip() for s in steps]
 
     if steps == [] or steps == [""]:
         response_text = (
