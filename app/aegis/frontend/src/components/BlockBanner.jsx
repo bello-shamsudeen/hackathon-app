@@ -27,7 +27,18 @@ export default function BlockBanner({ session }) {
     return () => { clearInterval(poll); window.removeEventListener('aegis:blocked', onBlocked) }
   }, [session])
 
-  const target = blockedUntil ? new Date(blockedUntil).getTime() : 0
+    // blocked_until is a naive UTC timestamp (no 'Z'/offset) from the backend.
+  // new Date() on a naive string is parsed as LOCAL time per the JS spec,
+  // skewing the deadline by the viewer's UTC offset - the root cause of the
+  // banner "flicker" on short blocks. Force UTC, tolerant of Python's
+  // microsecond precision (JS Date wants ms, not us).
+  const parseUtc = (iso) => {
+    if (!iso) return 0
+    const trimmed = iso.replace(/(\.\d{3})\d*$/, '$1')
+    const withZone = /[Zz]|[+-]\d\d:\d\d$/.test(trimmed) ? trimmed : trimmed + 'Z'
+    return new Date(withZone).getTime()
+  }
+  const target = blockedUntil ? parseUtc(blockedUntil) : 0
   const remaining = Math.max(0, Math.floor((target - now) / 1000))
 
   // 1s heartbeat only while blocked
